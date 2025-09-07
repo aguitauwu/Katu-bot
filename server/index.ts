@@ -85,6 +85,44 @@ app.use((req, res, next) => {
     });
   });
 
+  // Temporary debug endpoint to test if message counting works
+  app.get('/api/test/storage', (req, res) => {
+    try {
+      const { storage } = require('./storage');
+      const { getCurrentDateUTC } = require('./utils');
+      const currentDate = getCurrentDateUTC();
+      
+      // Get the MemStorage instance to inspect its data
+      const memStorage = storage as any;
+      const messageCountsMap: Map<string, any> = memStorage.dailyMessageCounts;
+      const guildConfigsMap: Map<string, any> = memStorage.guildConfigs;
+      
+      // Convert Maps to arrays for JSON serialization
+      const messageCounts: any[] = [];
+      messageCountsMap.forEach((value, key) => {
+        messageCounts.push({ key, value });
+      });
+      
+      const guildConfigs: any[] = [];
+      guildConfigsMap.forEach((value, key) => {
+        guildConfigs.push({ key, value });
+      });
+      
+      res.json({
+        currentDate,
+        messageCounts,
+        guildConfigs,
+        totalEntries: messageCounts.length,
+        hasData: messageCounts.length > 0,
+        timestamp: new Date().toISOString(),
+        botStatus: katuBot?.getClient().isReady() ? 'online' : 'offline'
+      });
+    } catch (error) {
+      console.error('Test storage error:', error);
+      res.status(500).json({ error: 'Error accessing test storage', details: error.message });
+    }
+  });
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
