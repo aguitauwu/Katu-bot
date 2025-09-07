@@ -1,5 +1,6 @@
 import { KatuBot } from './discord-bot';
 import { initStorage, getStorage } from './bot-storage';
+import { Logger } from './logger';
 
 // Initialize Katu Discord Bot
 let katuBot: KatuBot;
@@ -7,34 +8,37 @@ let katuBot: KatuBot;
 (async () => {
   // Initialize storage first
   try {
-    console.log('🗄️ Inicializando almacenamiento...');
+    Logger.startup('Storage', 'Inicializando sistema de almacenamiento...');
     await initStorage();
-    console.log('✅ Almacenamiento inicializado');
+    Logger.success('Storage', 'Sistema de almacenamiento inicializado correctamente');
   } catch (error) {
-    console.error('❌ Error al inicializar almacenamiento:', error);
+    Logger.error('Storage', 'Error crítico al inicializar almacenamiento', error);
     process.exit(1);
   }
 
   // Initialize Discord Bot
   try {
-    console.log('🤖 Iniciando Katu Bot...');
+    Logger.startup('Discord', 'Iniciando Katu Bot...');
     katuBot = new KatuBot();
     await katuBot.start();
-    console.log('✅ Katu Bot iniciado correctamente');
-    console.log('🤖 Katu Bot está activo y funcionando');
+    Logger.success('Discord', 'Katu Bot iniciado correctamente');
+    Logger.discord('Bot está activo y funcionando correctamente');
+    
+    // Log system stats every 30 minutes
+    setInterval(() => Logger.stats(), 30 * 60 * 1000);
   } catch (error) {
-    console.error('❌ Error al iniciar Katu Bot:', error);
+    Logger.error('Discord', 'Error crítico al iniciar Katu Bot', error);
     process.exit(1);
   }
 
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
-    console.log('\n🛑 Recibida señal de cierre, desconectando bot...');
+    Logger.shutdown('System', 'Recibida señal SIGINT, iniciando cierre graceful...');
     process.exit(0);
   });
 
   process.on('SIGTERM', async () => {
-    console.log('\n🛑 Recibida señal de terminación, desconectando bot...');
+    Logger.shutdown('System', 'Recibida señal SIGTERM, iniciando cierre graceful...');
     process.exit(0);
   });
 })();

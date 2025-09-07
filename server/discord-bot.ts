@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Message, ActivityType } from 'discord.js';
 import { getStorage } from './bot-storage.js';
 import { getCurrentDateUTC, logToChannel } from './discord-utils';
+import { Logger } from './logger';
 import {
   handleRankingCommand,
   handleMyStatsCommand,
@@ -29,7 +30,7 @@ export class KatuBot {
 
   private setupEventHandlers(): void {
     this.client.once('ready', () => {
-      console.log(`✅ Katu Bot está listo! Logueado como ${this.client.user?.tag}`);
+      Logger.discord(`Bot autenticado exitosamente como ${this.client.user?.tag}`);
       
       // Set bot activity status
       this.client.user?.setActivity('Contando mensajes diarios...', {
@@ -45,16 +46,16 @@ export class KatuBot {
     });
 
     this.client.on('guildCreate', (guild) => {
-      console.log(`➕ Bot añadido al servidor: ${guild.name} (${guild.id})`);
+      Logger.discord(`Bot añadido al servidor: ${guild.name} (ID: ${guild.id})`);
       this.logToGuild(guild.id, `➕ Katu Bot añadido al servidor ${guild.name}`);
     });
 
     this.client.on('guildDelete', (guild) => {
-      console.log(`➖ Bot removido del servidor: ${guild.name} (${guild.id})`);
+      Logger.discord(`Bot removido del servidor: ${guild.name} (ID: ${guild.id})`);
     });
 
     this.client.on('error', (error) => {
-      console.error('❌ Error del cliente Discord:', error);
+      Logger.error('Discord', 'Error del cliente Discord', error);
     });
   }
 
@@ -75,7 +76,7 @@ export class KatuBot {
       // Count the message
       await this.countMessage(message);
     } catch (error) {
-      console.error('Error handling message:', error);
+      Logger.error('MessageHandler', `Error procesando mensaje en ${message.guild?.name}`, error);
     }
   }
 
@@ -84,6 +85,8 @@ export class KatuBot {
     const command = args.shift()?.toLowerCase();
 
     if (!command) return;
+
+    Logger.command(message.guild?.name || 'DM', message.author.username, `!${command}`);
 
     switch (command) {
       case 'ranking':
@@ -122,15 +125,18 @@ export class KatuBot {
         username
       );
 
-      // Log new users (first message of the day)
+      // Log message count and new users
+      Logger.message(message.guild!.name, username, updatedCount.messageCount);
+      
       if (updatedCount.messageCount === 1) {
         this.logToGuild(
           guildId,
           `👋 Nuevo usuario detectado: ${username} envió su primer mensaje del día`
         );
+        Logger.info('NewUser', `Primer mensaje de ${username} en ${message.guild!.name}`);
       }
     } catch (error) {
-      console.error('Error counting message:', error);
+      Logger.error('MessageCounter', `Error contando mensaje de ${message.author.username}`, error);
     }
   }
 

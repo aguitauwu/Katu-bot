@@ -10,6 +10,7 @@ import {
   type InsertGuildConfig 
 } from "../shared/bot-schema.js";
 import mongoose from 'mongoose';
+import { Logger } from './logger';
 import { 
   DailyMessageCountModel, 
   GuildConfigModel,
@@ -193,9 +194,9 @@ class MongoStorage implements IBotStorage {
     
     try {
       await mongoose.connect(process.env.MONGODB_URI);
-      console.log('✅ Connected to MongoDB');
+      Logger.database('Conectado exitosamente a MongoDB');
     } catch (error) {
-      console.error('❌ Failed to connect to MongoDB:', error);
+      Logger.error('Database', 'Error al conectar con MongoDB', error);
       throw error;
     }
   }
@@ -224,13 +225,13 @@ class MongoStorage implements IBotStorage {
       { date, guildId, userId },
       { 
         $inc: { messageCount: 1 },
-        $set: { username },
-        $setOnInsert: { date, guildId, userId, messageCount: 0 }
+        $set: { username }
       },
       { 
         upsert: true, 
         new: true,
-        lean: true
+        lean: true,
+        setDefaultsOnInsert: true
       }
     );
 
@@ -399,13 +400,13 @@ export async function initStorage(): Promise<void> {
     const mongoStorage = new MongoStorage();
     await mongoStorage.connect();
     storage = mongoStorage;
-    console.log('✅ Using MongoDB storage');
+    Logger.database('Usando MongoDB como almacenamiento principal');
   } else if (process.env.DATABASE_URL) {
     storage = new PostgresBotStorage();
-    console.log('✅ Using PostgreSQL storage');
+    Logger.database('Usando PostgreSQL como almacenamiento principal');
   } else {
     storage = new MemoryBotStorage();
-    console.log('⚠️ Using memory storage (data will be lost on restart)');
+    Logger.warn('Storage', 'Usando almacenamiento en memoria (los datos se perderán al reiniciar)');
   }
 }
 
