@@ -29,8 +29,13 @@ export class ConversationHandler {
     
     public async handleConversation(message: Message): Promise<void> {
         const userId = message.author.id;
-        const guildId = message.guild!.id;
+        const guildId = message.guild?.id;
         const username = message.author.username;
+        
+        if (!guildId) {
+            Logger.warn('ConversationHandler', 'No guild ID found for message');
+            return;
+        }
         
         // Prevent multiple responses to the same user
         const userKey = `${guildId}-${userId}`;
