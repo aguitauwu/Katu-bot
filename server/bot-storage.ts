@@ -4,11 +4,18 @@ import { eq, and, desc, sum } from "drizzle-orm";
 import { 
   dailyMessageCounts, 
   guildConfigs, 
-  type DailyMessageCount, 
-  type GuildConfig,
+  type DailyMessageCount as PgDailyMessageCount, 
+  type GuildConfig as PgGuildConfig,
   type InsertDailyMessageCount,
   type InsertGuildConfig 
 } from "../shared/bot-schema.js";
+import mongoose from 'mongoose';
+import { 
+  DailyMessageCountModel, 
+  GuildConfigModel,
+  type DailyMessageCount,
+  type GuildConfig
+} from "../shared/mongodb-schema.js";
 
 export interface IBotStorage {
   getDailyMessageCount(date: string, guildId: string, userId: string): Promise<DailyMessageCount | undefined>;
@@ -45,7 +52,7 @@ class PostgresBotStorage implements IBotStorage {
       )
       .limit(1);
 
-    return result[0];
+    return result[0] as DailyMessageCount | undefined;
   }
 
   async incrementMessageCount(date: string, guildId: string, userId: string, username: string): Promise<DailyMessageCount> {
@@ -159,6 +166,133 @@ class PostgresBotStorage implements IBotStorage {
   }
 }
 
+class MongoStorage implements IBotStorage {
+  async connect(): Promise<void> {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI environment variable is required");
+    }
+    
+    try {
+      await mongoose.connect(process.env.MONGODB_URI);
+      console.log('✅ Connected to MongoDB');
+    } catch (error) {
+      console.error('❌ Failed to connect to MongoDB:', error);
+      throw error;
+    }
+  }
+
+  async disconnect(): Promise<void> {
+    await mongoose.disconnect();
+  }
+
+  async getDailyMessageCount(date: string, guildId: string, userId: string): Promise<DailyMessageCount | undefined> {
+    const result = await DailyMessageCountModel.findOne({ date, guildId, userId }).lean();
+    if (!result) return undefined;
+    
+    return {
+      date: result.date,
+      guildId: result.guildId,
+      userId: result.userId,
+      username: result.username,
+      messageCount: result.messageCount,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt
+    };
+  }
+
+  async incrementMessageCount(date: string, guildId: string, userId: string, username: string): Promise<DailyMessageCount> {
+    const result = await DailyMessageCountModel.findOneAndUpdate(
+      { date, guildId, userId },
+      { 
+        $inc: { messageCount: 1 },
+        $set: { username },
+        $setOnInsert: { date, guildId, userId, messageCount: 0 }
+      },
+      { 
+        upsert: true, 
+        new: true,
+        lean: true
+      }
+    );
+
+    return {
+      date: result.date,
+      guildId: result.guildId,
+      userId: result.userId,
+      username: result.username,
+      messageCount: result.messageCount,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt
+    };
+  }
+
+  async getDailyRanking(date: string, guildId: string, limit: number = 100): Promise<DailyMessageCount[]> {
+    const results = await DailyMessageCountModel.find({ date, guildId })
+      .sort({ messageCount: -1 })
+      .limit(limit)
+      .lean();
+
+    return results.map(result => ({
+      date: result.date,
+      guildId: result.guildId,
+      userId: result.userId,
+      username: result.username,
+      messageCount: result.messageCount,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt
+    }));
+  }
+
+  async getUserDailyStats(date: string, guildId: string, userId: string): Promise<DailyMessageCount | undefined> {
+    return this.getDailyMessageCount(date, guildId, userId);
+  }
+
+  async getTotalMessagesForDay(date: string, guildId: string): Promise<number> {
+    const result = await DailyMessageCountModel.aggregate([
+      { $match: { date, guildId } },
+      { $group: { _id: null, total: { $sum: '$messageCount' } } }
+    ]);
+
+    return result.length > 0 ? result[0].total : 0;
+  }
+
+  async getGuildConfig(guildId: string): Promise<GuildConfig | undefined> {
+    const result = await GuildConfigModel.findOne({ guildId }).lean();
+    if (!result) return undefined;
+
+    return {
+      guildId: result.guildId,
+      logChannelId: result.logChannelId,
+      timezone: result.timezone,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt
+    };
+  }
+
+  async setGuildLogChannel(guildId: string, logChannelId: string | null): Promise<GuildConfig> {
+    const result = await GuildConfigModel.findOneAndUpdate(
+      { guildId },
+      { 
+        $set: { logChannelId },
+        $setOnInsert: { guildId, timezone: "UTC" }
+      },
+      { 
+        upsert: true, 
+        new: true,
+        lean: true
+      }
+    );
+
+    return {
+      guildId: result.guildId,
+      logChannelId: result.logChannelId,
+      timezone: result.timezone,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt
+    };
+  }
+}
+
 class MemoryBotStorage implements IBotStorage {
   private messageCount: Map<string, DailyMessageCount> = new Map();
   private guildConfig: Map<string, GuildConfig> = new Map();
@@ -222,13 +356,13 @@ class MemoryBotStorage implements IBotStorage {
     const existing = this.guildConfig.get(guildId);
     
     if (existing) {
-      existing.logChannelId = logChannelId || undefined;
+      existing.logChannelId = logChannelId;
       existing.updatedAt = new Date();
       return existing;
     } else {
       const newConfig: GuildConfig = {
         guildId,
-        logChannelId: logChannelId || undefined,
+        logChannelId: logChannelId,
         timezone: "UTC",
         createdAt: new Date(),
         updatedAt: new Date()
@@ -242,7 +376,12 @@ class MemoryBotStorage implements IBotStorage {
 let storage: IBotStorage;
 
 export async function initStorage(): Promise<void> {
-  if (process.env.DATABASE_URL) {
+  if (process.env.MONGODB_URI) {
+    const mongoStorage = new MongoStorage();
+    await mongoStorage.connect();
+    storage = mongoStorage;
+    console.log('✅ Using MongoDB storage');
+  } else if (process.env.DATABASE_URL) {
     storage = new PostgresBotStorage();
     console.log('✅ Using PostgreSQL storage');
   } else {
