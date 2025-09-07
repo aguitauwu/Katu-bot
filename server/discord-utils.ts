@@ -65,7 +65,7 @@ export function createHelpEmbed(): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setTitle('🤖 Comandos de Katu Bot')
     .setColor('#8207DB')
-    .setDescription('Bot contador de mensajes diarios con sistema de ranking')
+    .setDescription('Bot contador de mensajes diarios con sistema de ranking y asistente IA')
     .setTimestamp()
     .setFooter({
       text: 'Powered by Katu Bot',
@@ -73,8 +73,16 @@ export function createHelpEmbed(): EmbedBuilder {
 
   embed.addFields([
     {
+      name: '🐾 Comandos de IA',
+      value: `\`.kai [mensaje]\` - Conversa con katu usando IA Gemini
+\`.kai\` - Saludo inicial de katu
+\`@katu [mensaje]\` - Menciona al bot para conversar
+\`katu [mensaje]\` - Inicia mensaje con "katu" para conversar`,
+      inline: false,
+    },
+    {
       name: '👥 Comandos para Usuarios',
-      value: `\`.kranking\` o \`.ktop\` - Ver top 100 usuarios más activos del día
+      value: `\`.kranking\` o \`.ktop\` - Ver top usuarios más activos del día
 \`.kmystats\` - Ver tus estadísticas personales
 \`.kstats @usuario\` - Ver estadísticas de otro usuario
 \`.khelp\` - Mostrar esta ayuda`,
@@ -87,11 +95,20 @@ export function createHelpEmbed(): EmbedBuilder {
       inline: false,
     },
     {
+      name: '🤖 Sobre la IA',
+      value: `• katu usa **Gemini AI** para conversaciones naturales
+• Personalidad: Neko girl kawaii y profesional 🐱
+• Responde en español con toque juguetón pero útil
+• Experta en múltiples temas: ciencia, arte, cultura pop
+• Siempre respetuosa y apta para todas las edades`,
+      inline: false,
+    },
+    {
       name: '📋 Información',
       value: `• Los contadores se resetean automáticamente a las 12:00 AM UTC
 • Solo se cuentan mensajes de usuarios (no bots)
 • Datos separados por servidor
-• Bot activo 24/7`,
+• Bot activo 24/7 con IA siempre disponible`,
       inline: false,
     },
   ]);

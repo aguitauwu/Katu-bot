@@ -129,6 +129,48 @@ export class KatuBot {
           await message.reply('¿Sobre qué te gustaría conversar? Usa `.kai tu mensaje aquí` 🐱');
         }
         break;
+      case 'kai':
+        // Handle the new .kai command for AI interaction
+        await this.handleKaiCommand(message, args);
+        break;
+    }
+  }
+
+  private async handleKaiCommand(message: Message, args: string[]): Promise<void> {
+    try {
+      const userMessage = args.join(' ');
+      
+      if (!userMessage || userMessage.trim().length === 0) {
+        await message.reply('¡Hola! 🐾 Soy katu, tu asistente neko favorita~ ¿En qué puedo ayudarte hoy? Usa `.kai tu mensaje aquí` para conversar conmigo, nya! ✨');
+        return;
+      }
+
+      // Create a modified message object with the user's input
+      const modifiedMessage = {
+        ...message,
+        content: userMessage.trim()
+      };
+
+      // Use the existing conversation handler
+      await conversationHandler.handleConversation(modifiedMessage as any);
+
+      // Log the kai command usage
+      const guildConfig = await getStorage().getGuildConfig(message.guild!.id);
+      logToChannel(
+        message.client,
+        message.guild!.id,
+        guildConfig?.logChannelId || null,
+        `🤖 ${message.author.username} usó el comando .kai`
+      );
+
+    } catch (error) {
+      Logger.error('KaiCommand', `Error procesando comando .kai de ${message.author.username}`, error);
+      
+      try {
+        await message.reply("Nya~ Algo salió mal mientras procesaba tu mensaje. ¿Podrías intentarlo de nuevo en un momento? 🐱💫");
+      } catch (replyError) {
+        Logger.error('KaiCommand', 'Failed to send error message', replyError);
+      }
     }
   }
 
