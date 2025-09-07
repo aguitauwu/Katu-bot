@@ -43,7 +43,9 @@ export class ConversationHandler {
         
         try {
             // Show typing indicator
-            await message.channel.sendTyping();
+            if ('sendTyping' in message.channel) {
+                await message.channel.sendTyping();
+            }
             
             // Clean message content (remove mentions, etc.)
             let cleanContent = message.content
@@ -76,7 +78,9 @@ export class ConversationHandler {
                     if (i === 0) {
                         await message.reply(chunks[i]);
                     } else {
-                        await message.channel.send(chunks[i]);
+                        if ('send' in message.channel) {
+                            await message.channel.send(chunks[i]);
+                        }
                     }
                     
                     // Add small delay between chunks
