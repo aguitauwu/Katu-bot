@@ -103,7 +103,7 @@ export async function handleStatsCommand(message: Message, args: string[]): Prom
   try {
     const mention = message.mentions.users.first();
     if (!mention) {
-      await message.reply('❌ Debes mencionar a un usuario. Ejemplo: `!stats @usuario`');
+      await message.reply('❌ Debes mencionar a un usuario. Ejemplo: `.kstats @usuario`');
       return;
     }
 
@@ -153,7 +153,7 @@ export async function handleSetLogCommand(message: Message, args: string[]): Pro
 
     const channelMention = message.mentions.channels.first();
     if (!channelMention) {
-      await message.reply('❌ Debes mencionar un canal. Ejemplo: `!setlog #bot-logs`');
+      await message.reply('❌ Debes mencionar un canal. Ejemplo: `.ksetlog #bot-logs`');
       return;
     }
 

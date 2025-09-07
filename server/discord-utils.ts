@@ -74,16 +74,16 @@ export function createHelpEmbed(): EmbedBuilder {
   embed.addFields([
     {
       name: '👥 Comandos para Usuarios',
-      value: `\`!ranking\` o \`!top\` - Ver top 100 usuarios más activos del día
-\`!mystats\` - Ver tus estadísticas personales
-\`!stats @usuario\` - Ver estadísticas de otro usuario
-\`!help\` - Mostrar esta ayuda`,
+      value: `\`.kranking\` o \`.ktop\` - Ver top 100 usuarios más activos del día
+\`.kmystats\` - Ver tus estadísticas personales
+\`.kstats @usuario\` - Ver estadísticas de otro usuario
+\`.khelp\` - Mostrar esta ayuda`,
       inline: false,
     },
     {
       name: '⚙️ Comandos para Administradores',
-      value: `\`!setlog #canal\` - Configurar canal de logs
-\`!removelog\` - Desactivar logs del bot`,
+      value: `\`.ksetlog #canal\` - Configurar canal de logs
+\`.kremovelog\` - Desactivar logs del bot`,
       inline: false,
     },
     {

@@ -13,7 +13,7 @@ import {
 
 export class KatuBot {
   private client: Client;
-  private readonly prefix = '!';
+  private readonly prefix = '.k';
 
   constructor() {
     this.client = new Client({
@@ -66,6 +66,9 @@ export class KatuBot {
     // Ignore messages not in guilds
     if (!message.guild) return;
 
+    // Ignore empty messages
+    if (!message.content.trim()) return;
+
     try {
       // Handle commands
       if (message.content.startsWith(this.prefix)) {
@@ -84,9 +87,9 @@ export class KatuBot {
     const args = message.content.slice(this.prefix.length).trim().split(/ +/);
     const command = args.shift()?.toLowerCase();
 
-    if (!command) return;
+    if (!command || command.length === 0) return;
 
-    Logger.command(message.guild?.name || 'DM', message.author.username, `!${command}`);
+    Logger.command(message.guild?.name || 'DM', message.author.username, `.k${command}`);
 
     switch (command) {
       case 'ranking':
