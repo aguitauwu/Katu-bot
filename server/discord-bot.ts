@@ -141,18 +141,20 @@ export class KatuBot {
       const userMessage = args.join(' ');
       
       if (!userMessage || userMessage.trim().length === 0) {
-        await message.reply('¡Hola! 🐾 Soy katu, tu asistente neko favorita~ ¿En qué puedo ayudarte hoy? Usa `.kai tu mensaje aquí` para conversar conmigo, nya! ✨');
+        await message.reply('¡Hola! 🐾 Soy katu, tu asistente neko favorita~ ¿En qué puedo ayudarte hoy? Usa `.kai [mensaje]` para conversar conmigo, nya! ✨');
         return;
       }
 
       // Create a modified message object with the user's input
       const modifiedMessage = {
         ...message,
-        content: userMessage.trim()
+        content: userMessage.trim(),
+        guild: message.guild,
+        author: message.author
       };
 
       // Use the existing conversation handler
-      await conversationHandler.handleConversation(modifiedMessage as any);
+      await conversationHandler.handleConversation(modifiedMessage as Message);
 
       // Log the kai command usage
       const guildConfig = await getStorage().getGuildConfig(message.guild!.id);
