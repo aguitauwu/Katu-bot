@@ -1,5 +1,6 @@
 import express from "express";
 import { KatuBot } from "./bot";
+import { getStorage } from "./storage";
 
 const app = express();
 
@@ -7,6 +8,16 @@ const app = express();
 let katuBot: KatuBot;
 
 (async () => {
+  // Initialize storage first
+  try {
+    console.log('🗄️ Inicializando almacenamiento...');
+    await getStorage();
+    console.log('✅ Almacenamiento inicializado');
+  } catch (error) {
+    console.error('❌ Error al inicializar almacenamiento:', error);
+    process.exit(1);
+  }
+
   // Initialize Discord Bot
   try {
     console.log('🤖 Iniciando Katu Bot...');
