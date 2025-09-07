@@ -1,6 +1,6 @@
 # Overview
 
-Katu Bot is a Discord bot application built with Node.js that tracks daily message counts for users across Discord servers. The system provides ranking functionality, user statistics, and configurable logging channels. The application is designed for 24/7 uptime on Replit and includes both a Discord bot backend and a React-based web frontend for potential dashboard functionality.
+Katu Bot is a Discord bot application built with Node.js that tracks daily message counts for users across Discord servers. The system provides ranking functionality, user statistics, and configurable logging channels. The application is designed for 24/7 uptime on Replit and is a pure Discord bot without any web interface.
 
 # User Preferences
 
@@ -17,15 +17,13 @@ The backend is built using **Express.js** with TypeScript and follows a modular 
 - **Event-Driven Architecture**: Listens to Discord message events to automatically count user messages and respond to commands
 - **Keep-Alive System**: Custom keep-alive mechanism designed for Replit hosting to maintain 24/7 uptime
 
-## Frontend Architecture
+## Server Architecture
 
-The frontend is a **React 18** application using:
+The server component is minimal and only provides:
 
-- **Vite** as the build tool and development server
-- **TypeScript** for type safety
-- **Tailwind CSS** with shadcn/ui components for styling
-- **React Query (TanStack Query)** for data fetching and state management
-- **Wouter** for client-side routing
+- **Express.js** minimal server for health checks
+- **Health endpoint** at `/health` for Replit keep-alive functionality
+- **No web interface** - pure Discord bot functionality
 
 ## Data Storage
 
@@ -63,15 +61,13 @@ The application uses **Drizzle ORM** with PostgreSQL for data persistence:
 - **Drizzle ORM**: Type-safe ORM for database operations and schema management
 - **Connection Pooling**: Uses @neondatabase/serverless for optimized connections
 
-## UI Framework
-- **Radix UI**: Headless UI primitives for accessible components
-- **shadcn/ui**: Pre-built component library built on Radix UI
-- **Lucide React**: Icon library for UI elements
+## Core Libraries
+- **Discord.js v14**: Official Discord API library for bot functionality
 
 ## Development Tools
-- **Vite**: Modern build tool with HMR and TypeScript support
 - **ESBuild**: Fast JavaScript bundler for production builds
-- **Replit Plugins**: Development environment integration for Replit hosting
+- **TypeScript**: Type safety and development experience
+- **TSX**: TypeScript execution for development
 
 ## Hosting Platform
 - **Replit**: Cloud-based hosting platform with automatic deployment
