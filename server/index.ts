@@ -1,5 +1,5 @@
-import { KatuBot } from './bot';
-import { getStorage } from './storage';
+import { KatuBot } from './discord-bot';
+import { initStorage, getStorage } from './bot-storage';
 
 // Initialize Katu Discord Bot
 let katuBot: KatuBot;
@@ -8,7 +8,7 @@ let katuBot: KatuBot;
   // Initialize storage first
   try {
     console.log('🗄️ Inicializando almacenamiento...');
-    await getStorage();
+    await initStorage();
     console.log('✅ Almacenamiento inicializado');
   } catch (error) {
     console.error('❌ Error al inicializar almacenamiento:', error);
