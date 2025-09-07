@@ -117,13 +117,16 @@ export class KatuBot {
       case 'help':
         await handleHelpCommand(message);
         break;
+      case 'ai':
       case 'chat':
-        // Handle chat command for AI conversation
+        // Handle AI chat command
         const chatMessage = args.join(' ');
         if (chatMessage) {
-          await conversationHandler.handleConversation(message);
+          // Modify the message content to include the chat message
+          const modifiedMessage = { ...message, content: chatMessage };
+          await conversationHandler.handleConversation(modifiedMessage as any);
         } else {
-          await message.reply('¿Sobre qué te gustaría conversar? Usa `.k chat tu mensaje aquí` 🐱');
+          await message.reply('¿Sobre qué te gustaría conversar? Usa `.kai tu mensaje aquí` 🐱');
         }
         break;
     }
