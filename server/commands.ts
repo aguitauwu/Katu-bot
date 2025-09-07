@@ -1,5 +1,5 @@
 import { Message, EmbedBuilder } from 'discord.js';
-import { storage } from './storage';
+import { getStorage } from './storage';
 import { getCurrentDateUTC, createRankingEmbed, createStatsEmbed, createHelpEmbed, logToChannel, isAdmin, paginateRanking } from './utils';
 
 export async function handleRankingCommand(message: Message): Promise<void> {
@@ -7,8 +7,8 @@ export async function handleRankingCommand(message: Message): Promise<void> {
     const currentDate = getCurrentDateUTC();
     const guildId = message.guild!.id;
     
-    const ranking = await storage.getDailyRanking(currentDate, guildId, 100);
-    const totalMessages = await storage.getTotalMessagesForDay(currentDate, guildId);
+    const ranking = await (await getStorage()).getDailyRanking(currentDate, guildId, 100);
+    const totalMessages = await (await getStorage()).getTotalMessagesForDay(currentDate, guildId);
     
     if (ranking.length === 0) {
       const embed = new EmbedBuilder()
@@ -46,7 +46,7 @@ export async function handleRankingCommand(message: Message): Promise<void> {
     await message.reply({ embeds: [embed] });
 
     // Log activity
-    const guildConfig = await storage.getGuildConfig(guildId);
+    const guildConfig = await (await getStorage()).getGuildConfig(guildId);
     logToChannel(
       message.client,
       guildId,
@@ -66,8 +66,8 @@ export async function handleMyStatsCommand(message: Message): Promise<void> {
     const guildId = message.guild!.id;
     const userId = message.author.id;
     
-    const userStats = await storage.getUserDailyStats(currentDate, guildId, userId);
-    const ranking = await storage.getDailyRanking(currentDate, guildId, 1000);
+    const userStats = await (await getStorage()).getUserDailyStats(currentDate, guildId, userId);
+    const ranking = await (await getStorage()).getDailyRanking(currentDate, guildId, 1000);
     
     if (!userStats) {
       const embed = new EmbedBuilder()
@@ -111,8 +111,8 @@ export async function handleStatsCommand(message: Message, args: string[]): Prom
     const guildId = message.guild!.id;
     const userId = mention.id;
     
-    const userStats = await storage.getUserDailyStats(currentDate, guildId, userId);
-    const ranking = await storage.getDailyRanking(currentDate, guildId, 1000);
+    const userStats = await (await getStorage()).getUserDailyStats(currentDate, guildId, userId);
+    const ranking = await (await getStorage()).getDailyRanking(currentDate, guildId, 1000);
     
     if (!userStats) {
       const embed = new EmbedBuilder()
@@ -163,7 +163,7 @@ export async function handleSetLogCommand(message: Message, args: string[]): Pro
     }
 
     const guildId = message.guild!.id;
-    await storage.setGuildLogChannel(guildId, channelMention.id);
+    await (await getStorage()).setGuildLogChannel(guildId, channelMention.id);
 
     const embed = new EmbedBuilder()
       .setTitle('✅ Canal de Logs Configurado')
@@ -196,7 +196,7 @@ export async function handleRemoveLogCommand(message: Message): Promise<void> {
     }
 
     const guildId = message.guild!.id;
-    const guildConfig = await storage.getGuildConfig(guildId);
+    const guildConfig = await (await getStorage()).getGuildConfig(guildId);
     
     if (!guildConfig?.logChannelId) {
       await message.reply('❌ No hay un canal de logs configurado.');
@@ -211,7 +211,7 @@ export async function handleRemoveLogCommand(message: Message): Promise<void> {
       `❌ Logs desactivados por ${message.author.username}`
     );
 
-    await storage.setGuildLogChannel(guildId, null);
+    await (await getStorage()).setGuildLogChannel(guildId, null);
 
     const embed = new EmbedBuilder()
       .setTitle('✅ Logs Desactivados')

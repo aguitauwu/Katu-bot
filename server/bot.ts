@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, Message, ActivityType } from 'discord.js';
-import { storage } from './storage';
+import { getStorage } from './storage';
 import { getCurrentDateUTC, logToChannel } from './utils';
 import {
   handleRankingCommand,
@@ -115,7 +115,7 @@ export class KatuBot {
       const userId = message.author.id;
       const username = message.author.username;
 
-      const updatedCount = await storage.incrementMessageCount(
+      const updatedCount = await (await getStorage()).incrementMessageCount(
         currentDate,
         guildId,
         userId,
@@ -166,7 +166,7 @@ export class KatuBot {
 
   private async logToGuild(guildId: string, message: string): Promise<void> {
     try {
-      const guildConfig = await storage.getGuildConfig(guildId);
+      const guildConfig = await (await getStorage()).getGuildConfig(guildId);
       logToChannel(this.client, guildId, guildConfig?.logChannelId || null, message);
     } catch (error) {
       console.error('Error logging to guild:', error);
