@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Message, ActivityType } from 'discord.js';
 import { getStorage } from './bot-storage.js';
 import { getCurrentDateUTC, logToChannel } from './discord-utils';
 import { Logger } from './logger';
+import { conversationHandler } from './conversation-handler.js';
 import {
   handleRankingCommand,
   handleMyStatsCommand,
@@ -33,12 +34,12 @@ export class KatuBot {
       Logger.discord(`Bot autenticado exitosamente como ${this.client.user?.tag}`);
       
       // Set bot activity status
-      this.client.user?.setActivity('Contando mensajes diarios...', {
-        type: ActivityType.Watching,
+      this.client.user?.setActivity('Conversando con usuarios...', {
+        type: ActivityType.Listening,
       });
 
       // Log startup to all configured log channels
-      this.logToAllGuilds('🚀 Katu Bot iniciado y listo para contar mensajes');
+      this.logToAllGuilds('🚀 Katu Bot iniciado con IA Gemini activada');
     });
 
     this.client.on('messageCreate', (message) => {
@@ -70,7 +71,7 @@ export class KatuBot {
     if (!message.content.trim()) return;
 
     try {
-      // Handle commands
+      // Handle commands first
       if (message.content.startsWith(this.prefix)) {
         await this.handleCommand(message);
         return;
@@ -78,6 +79,11 @@ export class KatuBot {
 
       // Count the message
       await this.countMessage(message);
+
+      // Check if bot should respond to this message
+      if (await conversationHandler.shouldRespond(message)) {
+        await conversationHandler.handleConversation(message);
+      }
     } catch (error) {
       Logger.error('MessageHandler', `Error procesando mensaje en ${message.guild?.name}`, error);
     }
@@ -110,6 +116,15 @@ export class KatuBot {
         break;
       case 'help':
         await handleHelpCommand(message);
+        break;
+      case 'chat':
+        // Handle chat command for AI conversation
+        const chatMessage = args.join(' ');
+        if (chatMessage) {
+          await conversationHandler.handleConversation(message);
+        } else {
+          await message.reply('¿Sobre qué te gustaría conversar? Usa `.k chat tu mensaje aquí` 🐱');
+        }
         break;
     }
   }

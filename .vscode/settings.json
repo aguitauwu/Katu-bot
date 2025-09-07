@@ -1,0 +1,19 @@
+{
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true
+  },
+  "files.associations": {
+    "*.env": "properties",
+    "*.env.example": "properties"
+  },
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "typescript.suggest.autoImports": true
+}
