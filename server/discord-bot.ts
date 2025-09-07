@@ -3,6 +3,7 @@ import { getStorage } from './bot-storage.js';
 import { getCurrentDateUTC, logToChannel } from './discord-utils';
 import { Logger } from './logger';
 import { conversationHandler } from './conversation-handler.js';
+import { geminiService } from './gemini-ai.js';
 import {
   handleRankingCommand,
   handleMyStatsCommand,
@@ -126,54 +127,112 @@ export class KatuBot {
           const modifiedMessage = { ...message, content: chatMessage };
           await conversationHandler.handleConversation(modifiedMessage as any);
         } else {
-          await message.reply('¿Sobre qué te gustaría conversar? Usa `.kai tu mensaje aquí` 🐱');
+          await message.reply('¿Sobre qué te gustaría conversar? Usa `.kai [mensaje]` 🐱');
         }
         break;
       case 'kai':
-        // Handle the new .kai command for AI interaction
-        await this.handleKaiCommand(message, args);
+        // Handle .kai command - direct AI interaction
+        const userMessage = args.join(' ');
+        if (!userMessage || userMessage.trim().length === 0) {
+          await message.reply('¡Hola! 🐾 Soy katu, tu asistente neko favorita~ ¿En qué puedo ayudarte hoy? Usa `.kai [mensaje]` para conversar conmigo, nya! ✨');
+          return;
+        }
+        
+        try {
+          // Generate AI response directly
+          const aiResponse = await geminiService.generateResponse(
+            userMessage.trim(),
+            message.author.id,
+            message.guild!.id,
+            message.author.username
+          );
+          
+          // Send response
+          if (aiResponse.response.length <= 2000) {
+            await message.reply(aiResponse.response);
+          } else {
+            // Split long messages
+            const chunks = this.splitMessage(aiResponse.response, 2000);
+            for (let i = 0; i < chunks.length; i++) {
+              if (i === 0) {
+                await message.reply(chunks[i]);
+              } else {
+                if ('send' in message.channel) {
+                  await message.channel.send(chunks[i]);
+                }
+              }
+              if (i < chunks.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
+            }
+          }
+          
+          Logger.success('KaiCommand', `Responded to ${message.author.username} in ${message.guild!.name}`);
+        } catch (error) {
+          Logger.error('KaiCommand', `Error in .kai command for ${message.author.username}`, error);
+          await message.reply("Nya~ Algo salió mal mientras procesaba tu mensaje. ¿Podrías intentarlo de nuevo en un momento? 🐱💫");
+        }
         break;
     }
   }
 
-  private async handleKaiCommand(message: Message, args: string[]): Promise<void> {
-    try {
-      const userMessage = args.join(' ');
-      
-      if (!userMessage || userMessage.trim().length === 0) {
-        await message.reply('¡Hola! 🐾 Soy katu, tu asistente neko favorita~ ¿En qué puedo ayudarte hoy? Usa `.kai [mensaje]` para conversar conmigo, nya! ✨');
-        return;
-      }
-
-      // Create a modified message object with the user's input
-      const modifiedMessage = {
-        ...message,
-        content: userMessage.trim(),
-        guild: message.guild,
-        author: message.author
-      };
-
-      // Use the existing conversation handler
-      await conversationHandler.handleConversation(modifiedMessage as Message);
-
-      // Log the kai command usage
-      const guildConfig = await getStorage().getGuildConfig(message.guild!.id);
-      logToChannel(
-        message.client,
-        message.guild!.id,
-        guildConfig?.logChannelId || null,
-        `🤖 ${message.author.username} usó el comando .kai`
-      );
-
-    } catch (error) {
-      Logger.error('KaiCommand', `Error procesando comando .kai de ${message.author.username}`, error);
-      
-      try {
-        await message.reply("Nya~ Algo salió mal mientras procesaba tu mensaje. ¿Podrías intentarlo de nuevo en un momento? 🐱💫");
-      } catch (replyError) {
-        Logger.error('KaiCommand', 'Failed to send error message', replyError);
+  private splitMessage(message: string, maxLength: number): string[] {
+    if (message.length <= maxLength) {
+      return [message];
+    }
+    
+    const chunks: string[] = [];
+    let currentChunk = '';
+    
+    // Split by sentences first
+    const sentences = message.split(/[.!?]\s+/);
+    
+    for (const sentence of sentences) {
+      if ((currentChunk + sentence).length <= maxLength - 2) {
+        currentChunk += sentence + '. ';
+      } else {
+        if (currentChunk) {
+          chunks.push(currentChunk.trim());
+          currentChunk = '';
+        }
+        
+        // If single sentence is too long, split by words
+        if (sentence.length > maxLength) {
+          const words = sentence.split(' ');
+          let wordChunk = '';
+          
+          for (const word of words) {
+            if ((wordChunk + word).length <= maxLength - 1) {
+              wordChunk += word + ' ';
+            } else {
+              if (wordChunk) {
+                chunks.push(wordChunk.trim());
+                wordChunk = '';
+              }
+              
+              // If single word is too long, just add it
+              if (word.length > maxLength) {
+                chunks.push(word);
+              } else {
+                wordChunk = word + ' ';
+              }
+            }
+          }
+          
+          if (wordChunk) {
+            currentChunk = wordChunk;
+          }
+        } else {
+          currentChunk = sentence + '. ';
+        }
       }
     }
+    
+    if (currentChunk) {
+      chunks.push(currentChunk.trim());
+    }
+    
+    return chunks;
   }
 
   private async countMessage(message: Message): Promise<void> {
