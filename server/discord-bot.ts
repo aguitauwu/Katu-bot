@@ -1,6 +1,6 @@
 import { Client, GatewayIntentBits, Message, ActivityType } from 'discord.js';
 import { getStorage } from './bot-storage.js';
-import { getCurrentDateUTC, logToChannel } from './discord-utils.js';
+import { getCurrentDateUTC, logToChannel } from './discord-utils';
 import {
   handleRankingCommand,
   handleMyStatsCommand,
@@ -8,7 +8,7 @@ import {
   handleSetLogCommand,
   handleRemoveLogCommand,
   handleHelpCommand
-} from './discord-commands.js';
+} from './discord-commands';
 
 export class KatuBot {
   private client: Client;

@@ -1,6 +1,6 @@
 import { Message, EmbedBuilder } from 'discord.js';
 import { getStorage } from './bot-storage.js';
-import { getCurrentDateUTC, createRankingEmbed, createStatsEmbed, createHelpEmbed, logToChannel, isAdmin, paginateRanking } from './discord-utils.js';
+import { getCurrentDateUTC, createRankingEmbed, createStatsEmbed, createHelpEmbed, logToChannel, isAdmin, paginateRanking } from './discord-utils';
 
 export async function handleRankingCommand(message: Message): Promise<void> {
   try {
@@ -27,7 +27,7 @@ export async function handleRankingCommand(message: Message): Promise<void> {
     const paginatedRanking = paginateRanking(ranking, page, 20);
     
     const embed = createRankingEmbed(
-      paginatedRanking.data.map((user, index) => ({
+      paginatedRanking.data.map((user: any, index: number) => ({
         username: user.username,
         messageCount: user.messageCount,
         userId: user.userId

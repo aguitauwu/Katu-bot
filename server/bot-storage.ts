@@ -17,14 +17,33 @@ import {
   type GuildConfig
 } from "../shared/mongodb-schema.js";
 
+// Unified types for consistency across storage implementations
+type UnifiedDailyMessageCount = {
+  date: string;
+  guildId: string;
+  userId: string;
+  username: string;
+  messageCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type UnifiedGuildConfig = {
+  guildId: string;
+  logChannelId?: string | null;
+  timezone: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export interface IBotStorage {
-  getDailyMessageCount(date: string, guildId: string, userId: string): Promise<DailyMessageCount | undefined>;
-  incrementMessageCount(date: string, guildId: string, userId: string, username: string): Promise<DailyMessageCount>;
-  getDailyRanking(date: string, guildId: string, limit?: number): Promise<DailyMessageCount[]>;
-  getUserDailyStats(date: string, guildId: string, userId: string): Promise<DailyMessageCount | undefined>;
+  getDailyMessageCount(date: string, guildId: string, userId: string): Promise<UnifiedDailyMessageCount | undefined>;
+  incrementMessageCount(date: string, guildId: string, userId: string, username: string): Promise<UnifiedDailyMessageCount>;
+  getDailyRanking(date: string, guildId: string, limit?: number): Promise<UnifiedDailyMessageCount[]>;
+  getUserDailyStats(date: string, guildId: string, userId: string): Promise<UnifiedDailyMessageCount | undefined>;
   getTotalMessagesForDay(date: string, guildId: string): Promise<number>;
-  getGuildConfig(guildId: string): Promise<GuildConfig | undefined>;
-  setGuildLogChannel(guildId: string, logChannelId: string | null): Promise<GuildConfig>;
+  getGuildConfig(guildId: string): Promise<UnifiedGuildConfig | undefined>;
+  setGuildLogChannel(guildId: string, logChannelId: string | null): Promise<UnifiedGuildConfig>;
 }
 
 class PostgresBotStorage implements IBotStorage {
