@@ -235,6 +235,10 @@ class MongoStorage implements IBotStorage {
       }
     );
 
+    if (!result) {
+      throw new Error('Failed to increment message count');
+    }
+
     return {
       date: result.date,
       guildId: result.guildId,
@@ -302,6 +306,10 @@ class MongoStorage implements IBotStorage {
         lean: true
       }
     );
+
+    if (!result) {
+      throw new Error('Failed to set guild log channel');
+    }
 
     return {
       guildId: result.guildId,
