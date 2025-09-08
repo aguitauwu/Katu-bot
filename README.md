@@ -17,7 +17,13 @@
 
 *Bot especializado en rastrear mensajes diarios, generar rankings adorables y gestionar estadísticas de servidor con personalidad gatuna*
 
-[📋 Ver Comandos](#-comandos-disponibles) • [🚀 Instalación](#-instalación-rápida) • [💻 VS Code/Cursor](#-instalación-en-editores) • [🗄️ Base de Datos](#-sistema-de-base-de-datos) • [📖 Documentación](#-documentación)
+## 🚀 **¡Úsalo AHORA en Replit!**
+
+[![Run on Replit](https://img.shields.io/badge/🔥_Usar_en_Replit-4DFF4D?style=for-the-badge&logo=replit&logoColor=white)](https://replit.com/@regularcatfishz/Katu?s=app)
+
+**¿Quieres probar Katu Bot inmediatamente sin instalación?** ¡Solo haz clic arriba! 🎉
+
+[📋 Ver Comandos](#-comandos-disponibles) • [🌐 Usar en Replit](#-usar-en-replit-súper-fácil) • [🚀 Instalación Local](#-instalación-local) • [💻 VS Code/Cursor](#-instalación-en-editores) • [🗄️ Base de Datos](#-sistema-de-base-de-datos) • [📖 Documentación](#-documentación)
 
 </div>
 
@@ -125,7 +131,7 @@ GEMINI_API_KEY=tu_api_key_de_gemini_aqui
 
 ---
 
-## 🚀 Instalación Rápida
+## 🚀 Instalación Local
 
 ### 📋 **Prerrequisitos**
 
@@ -175,6 +181,55 @@ SESSION_SECRET=tu_session_secret_aqui
 # Environment
 NODE_ENV=development
 ```
+
+---
+
+## 🌐 Usar en Replit (¡Súper Fácil!)
+
+### 🚀 **Opción 1: Fork Directo**
+
+[![Run on Replit](https://img.shields.io/badge/🔥_Fork_en_Replit-4DFF4D?style=for-the-badge&logo=replit&logoColor=white)](https://replit.com/@regularcatfishz/Katu?s=app)
+
+**¡La forma más rápida de empezar!** 
+
+1. **Haz clic en el botón de arriba** - Se abrirá el proyecto en Replit
+2. **Haz Fork** - Crea tu propia copia del bot
+3. **Configura las variables de entorno en Secrets:**
+   - `DISCORD_TOKEN` - Token de tu bot de Discord
+   - `GEMINI_API_KEY` - API key de Google Gemini
+   - `MONGODB_URI` - URI de MongoDB (opcional)
+4. **Presiona Run** - ¡Tu bot estará activo inmediatamente!
+
+### 🎯 **Opción 2: Desde Cero en Replit**
+
+1. **Crear nuevo Repl:**
+   - Ve a [Replit.com](https://replit.com)
+   - Crea nuevo Repl: Node.js
+   - Nombra tu proyecto: "Katu-Bot"
+
+2. **Importar código:**
+   ```bash
+   # En el terminal de Replit
+   git clone https://github.com/aguitauwu/Katu-bot.git .
+   npm install
+   ```
+
+3. **Configurar Secrets:**
+   - Ir a **Secrets** tab (candado) en la barra lateral
+   - Agregar las variables necesarias del `.env.example`
+
+4. **Ejecutar:**
+   ```bash
+   npm run dev
+   ```
+
+### 💡 **Ventajas de Replit:**
+
+- ✅ **Sin instalación**: Todo en el navegador
+- ✅ **Hosting gratuito**: Tu bot estará online 24/7
+- ✅ **Fácil configuración**: Secrets integrados
+- ✅ **Colaboración**: Comparte tu bot fácilmente
+- ✅ **Auto-restart**: Si se cae, se reinicia automáticamente
 
 ---
 
