@@ -11,6 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-Latest-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Powered-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
 **¡Soy Katu Bot! ni yo se que soy ~**
 
 *Bot especializado en rastrear mensajes diarios, generar rankings y pos hablar con ia*
