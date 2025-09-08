@@ -1,4 +1,4 @@
-# 🐱✨ KATU BOT - Bot Contador de Mensajes Kawaii
+#  KATU BOT - 
 
 <div align="center">
 
