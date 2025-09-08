@@ -131,48 +131,128 @@ export class KatuBot {
         }
         break;
       case 'kai':
-        // Handle .kai command - direct AI interaction
-        const userMessage = args.join(' ');
-        if (!userMessage || userMessage.trim().length === 0) {
-          await message.reply('¡Hola! 🐾 Soy katu, tu asistente neko favorita~ ¿En qué puedo ayudarte hoy? Usa `.kai [mensaje]` para conversar conmigo, nya! ✨');
-          return;
-        }
+        await this.handleKaiCommand(message, args);
+        break;
+    }
+  }
+
+  private async handleKaiCommand(message: Message, args: string[]): Promise<void> {
+    try {
+      const userMessage = args.join(' ');
+      
+      // Si no hay mensaje, mostrar saludo
+      if (!userMessage || userMessage.trim().length === 0) {
+        await message.reply('¡Hola! 🐾 Soy katu, tu asistente neko favorita~ ¿En qué puedo ayudarte hoy? Usa `.kai [mensaje]` para conversar conmigo, nya! ✨');
+        return;
+      }
+
+      // Mostrar indicador de escritura
+      if ('sendTyping' in message.channel) {
+        await message.channel.sendTyping();
+      }
+
+      Logger.info('KaiCommand', `Processing .kai command from ${message.author.username}: "${userMessage}"`);
+      
+      // Generar respuesta de AI directamente
+      const aiResponse = await geminiService.generateResponse(
+        userMessage.trim(),
+        message.author.id,
+        message.guild!.id,
+        message.author.username
+      );
+      
+      // Enviar respuesta con límite de mensajes
+      await this.sendKaiResponse(message, aiResponse.response);
+      
+      Logger.success('KaiCommand', `Responded to ${message.author.username} in ${message.guild!.name}`);
+      
+    } catch (error) {
+      Logger.error('KaiCommand', `Error in .kai command for ${message.author.username}`, error);
+      
+      try {
+        await message.reply("Nya~ Algo salió mal mientras procesaba tu mensaje. ¿Podrías intentarlo de nuevo en un momento? 🐱💫");
+      } catch (replyError) {
+        Logger.error('KaiCommand', 'Failed to send error message', replyError);
+      }
+    }
+  }
+
+  private async sendKaiResponse(message: Message, response: string): Promise<void> {
+    const maxLength = 2000;
+    
+    // Si la respuesta es corta, enviarla directamente
+    if (response.length <= maxLength) {
+      await message.reply(response);
+      return;
+    }
+    
+    // Dividir en chunks
+    const chunks = this.splitMessage(response, maxLength);
+    
+    // Si hay más de 3 chunks, hacer un resumen
+    if (chunks.length > 3) {
+      try {
+        Logger.info('KaiCommand', `Response too long (${chunks.length} chunks), generating summary`);
         
-        try {
-          // Generate AI response directly
-          const aiResponse = await geminiService.generateResponse(
-            userMessage.trim(),
-            message.author.id,
-            message.guild!.id,
-            message.author.username
-          );
-          
-          // Send response
-          if (aiResponse.response.length <= 2000) {
-            await message.reply(aiResponse.response);
+        const summaryResponse = await geminiService.generateResponse(
+          `Por favor, haz un resumen más conciso de tu respuesta anterior: "${response}"`,
+          message.author.id,
+          message.guild!.id,
+          message.author.username
+        );
+        
+        const summaryChunks = this.splitMessage(summaryResponse.response, maxLength);
+        
+        // Si el resumen también es muy largo, usar solo los primeros 3 chunks
+        const finalChunks = summaryChunks.length > 3 ? summaryChunks.slice(0, 3) : summaryChunks;
+        
+        for (let i = 0; i < finalChunks.length; i++) {
+          if (i === 0) {
+            await message.reply(finalChunks[i]);
           } else {
-            // Split long messages
-            const chunks = this.splitMessage(aiResponse.response, 2000);
-            for (let i = 0; i < chunks.length; i++) {
-              if (i === 0) {
-                await message.reply(chunks[i]);
-              } else {
-                if ('send' in message.channel) {
-                  await message.channel.send(chunks[i]);
-                }
-              }
-              if (i < chunks.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-              }
+            if ('send' in message.channel) {
+              await message.channel.send(finalChunks[i]);
             }
           }
           
-          Logger.success('KaiCommand', `Responded to ${message.author.username} in ${message.guild!.name}`);
-        } catch (error) {
-          Logger.error('KaiCommand', `Error in .kai command for ${message.author.username}`, error);
-          await message.reply("Nya~ Algo salió mal mientras procesaba tu mensaje. ¿Podrías intentarlo de nuevo en un momento? 🐱💫");
+          if (i < finalChunks.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
-        break;
+        
+      } catch (summaryError) {
+        Logger.error('KaiCommand', 'Error generating summary, using first 3 chunks', summaryError);
+        
+        // Si falla el resumen, usar los primeros 3 chunks originales
+        for (let i = 0; i < 3; i++) {
+          if (i === 0) {
+            await message.reply(chunks[i]);
+          } else {
+            if ('send' in message.channel) {
+              await message.channel.send(chunks[i]);
+            }
+          }
+          
+          if (i < 2) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
+    } else {
+      // Enviar todos los chunks (máximo 3)
+      for (let i = 0; i < chunks.length; i++) {
+        if (i === 0) {
+          await message.reply(chunks[i]);
+        } else {
+          if ('send' in message.channel) {
+            await message.channel.send(chunks[i]);
+          }
+        }
+        
+        if (i < chunks.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
     }
   }
 
@@ -184,7 +264,7 @@ export class KatuBot {
     const chunks: string[] = [];
     let currentChunk = '';
     
-    // Split by sentences first
+    // Dividir por oraciones primero
     const sentences = message.split(/[.!?]\s+/);
     
     for (const sentence of sentences) {
@@ -196,7 +276,7 @@ export class KatuBot {
           currentChunk = '';
         }
         
-        // If single sentence is too long, split by words
+        // Si una oración es muy larga, dividir por palabras
         if (sentence.length > maxLength) {
           const words = sentence.split(' ');
           let wordChunk = '';
@@ -210,7 +290,7 @@ export class KatuBot {
                 wordChunk = '';
               }
               
-              // If single word is too long, just add it
+              // Si una palabra es muy larga, agregarla tal como está
               if (word.length > maxLength) {
                 chunks.push(word);
               } else {
