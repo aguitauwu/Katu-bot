@@ -171,9 +171,6 @@ MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/katubot
 # Opcional: PostgreSQL como alternativa
 # DATABASE_URL=postgresql://user:password@host:port/database
 
-# Session & Security
-SESSION_SECRET=tu_session_secret_aqui
-
 # Environment
 NODE_ENV=development
 ```
