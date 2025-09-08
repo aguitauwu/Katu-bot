@@ -4,7 +4,7 @@
 
 <img src="assets/katu-avatar.png" alt="Katu Bot Avatar" width="200" height="200" style="border-radius: 50%; border: 3px solid #FF69B4;"/>
 
-![KATU Banner](https://img.shields.io/badge/🐱✨-KATU_BOT-FF69B4?style=for-the-badge&labelColor=FF91A4)
+![KATU Banner](https://img.shields.io/badge/🐱✨-KATU_BOT-FF69B4?style=for-the-badge&labelColor=)
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-3776AB?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Discord.js](https://img.shields.io/badge/Discord.js-v14+-7289DA?style=flat-square&logo=discord&logoColor=white)](https://discord.js.org/)
