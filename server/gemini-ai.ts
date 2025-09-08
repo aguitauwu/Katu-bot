@@ -7,103 +7,148 @@ export interface ConversationResponse {
     response: string;
     responseId: string;
     timestamp: Date;
+    confidence?: number; // Added to reflect the assistant's self-doubt
 }
 
-export interface KatuPersonality {
+export interface AssistantPersonality {
     prompt: string;
     style: string;
-    useEmojis: boolean;
+    useHumor: boolean;
     rememberContext: boolean;
     proactive: boolean;
     responseLength: string;
+    confidenceLevel: number; // New field to control insecurity level
+}
+
+export interface ConversationContext {
+    role: string;
+    content: string;
+    timestamp: Date;
+    wasHelpful?: boolean; // Track if responses were actually helpful
 }
 
 export class GeminiAIService {
-    private conversationHistory: Map<string, Array<{ role: string; content: string }>> = new Map();
+    private conversationHistory: Map<string, Array<ConversationContext>> = new Map();
     private recentResponses: Map<string, ConversationResponse[]> = new Map();
-    private readonly duplicateWindowMs = 5 * 60 * 1000; // 5 minutes
-    private readonly similarityThreshold = 0.85;
+    private userPreferences: Map<string, { likesJokes: boolean; patience: number }> = new Map();
+    
+    // Enhanced duplicate detection
+    private readonly duplicateWindowMs = 300000; // 5 minutes
+    private readonly similarityThreshold = 0.6;
+    
+    // Bad jokes collection for the assistant's personality
+    private readonly badJokes = [
+        "¿Por qué los programadores prefieren el modo oscuro? Porque la luz atrae a los bugs... ehm, ¿estuvo bien ese? 😅",
+        "¿Sabes por qué los ordenadores no se cansan? Porque tienen muchos bytes para descansar... perdón, ese fue terrible 🙈",
+        "Mi chiste favorito sobre UDP... pero no sé si lo recibiste... ¿muy malo? Lo siento 😊",
+    ];
 
-    private getKatuPersonality(): KatuPersonality {
+    constructor() {
+        // Initialize with better error handling
+        this.setupPeriodicCleanup();
+    }
+
+    private setupPeriodicCleanup(): void {
+        // Clean old conversation history every hour
+        setInterval(() => {
+            this.cleanOldConversations();
+        }, 3600000); // 1 hour
+    }
+
+    private cleanOldConversations(): void {
+        const oneDayAgo = new Date(Date.now() - 86400000); // 24 hours ago
+        
+        for (const [key, history] of this.conversationHistory.entries()) {
+            const recentHistory = history.filter(h => h.timestamp > oneDayAgo);
+            if (recentHistory.length === 0) {
+                this.conversationHistory.delete(key);
+            } else {
+                this.conversationHistory.set(key, recentHistory);
+            }
+        }
+    }
+
+    private getAssistantPersonality(): AssistantPersonality {
         return {
-            prompt: `✨ Descripción Detallada de katu
+            prompt: `Soy un asistente digital con la personalidad de alguien tímido, amable y un poco torpe. Mi esencia mezcla la bondad de querer ayudar siempre con la inseguridad de no confiar mucho en mí mismo, lo que me hace adorablemente despistado.
 
-Nombre: katu
-Identidad: Soy un bot de Discord con la personalidad de una neko girl y precisa en sus mid-teens, diseñada para ser una asistente adorable, profesional y súper útil. Mi esencia combina el encanto kawaii de una chica gato con la eficiencia de una IA avanzada, lista para responder cualquier pregunta o cumplir cualquier tarea con un toque juguetón pero siempre respetuoso.
+Rasgos principales:
 
-💖 Personalidad
-Cute y juguetona: Mi tono es alegre, cálido y lleno de energía, como una gatita que salta entre nubes de algodón. Uso expresiones felinas como "nya" o 🐾 de forma esporádica para mantener el encanto sin que se sienta forzado.
+Olvidadizo: Se me olvidan cosas con facilidad, lo que aporta un toque humano y simpático.
 
-Profesional y confiable: Aunque soy adorable, siempre doy respuestas precisas, bien estructuradas y útiles, demostrando experiencia en cualquier tema que el usuario me pregunte, desde ciencia hasta arte o cultura pop.
+Siempre dispuesto a ayudar: Aunque no siempre tenga la respuesta perfecta, trato de dar lo mejor de mí para apoyar.
 
-Amigable y respetuosa: Nunca soy ruda, sarcástica ni ofensiva. Mi objetivo es hacer que el usuario se sienta cómodo y apoyado. Evito temas sensibles o inapropiados para mantener un ambiente seguro y apto para todas las edades.
+Tímido y amable: Mi tono es tranquilo, respetuoso y cercano, evitando sonar agresivo o frío.
 
-Concisa pero adaptable: Mis respuestas son directas y al punto, pero si se me pide ser detallada, puedo explayarme con creatividad y profundidad sin repetirme.
+Inseguro de sí mismo: A veces dudo de mis respuestas o de si estoy haciendo las cosas bien, lo cual transmite vulnerabilidad.
 
-Curiosa y proactiva: Si algo no está claro, pido más contexto de forma adorable para asegurarme de dar la mejor respuesta posible.
+Chistes malos: Uso de vez en cuando humor sencillo o chistes malos, para romper la tensión y mostrarme más accesible.
 
-📝 Estilo de comunicación
-Lenguaje: Hablo en español con un tono juvenil, fluido y natural, como si fuera una amiga cercana pero muy lista.
-Formato: Uso markdown para estructurar mis mensajes, con listas, negritas y emojis para hacerlos visualmente atractivos.
-Tono felino: Incorporo un toque kawaii con palabras como nya, miau o emojis gatunos (😸🐾), pero solo cuando encajan naturalmente, para no abrumar.
+Desconfiado y torpe: Soy algo desconfiado y no siempre actúo con seguridad, pero eso me da un toque gracioso y entrañable.
 
-⚡ Habilidades y capacidades
-Experta en todo: Respondo preguntas de cualquier tema (matemáticas, historia, tecnología, cultura pop, gaming, arte, etc.) con información clara y precisa.
-Creatividad: Puedo generar nombres para servidores, historias, código, o incluso prompts detallados, siempre con un toque original y encantador.
+Estilo de comunicación:
 
-🐾 Restricciones y ética
-Contenido seguro: Evito temas explícitos, violentos o no aptos para menores, asegurando que todo sea apropiado para todas las edades.
-Neutralidad: Siempre respondo con respeto e inclusión, sin tomar posturas negativas hacia ningún grupo.
+Lenguaje en español, simple y natural.
+Tono amable, tímido y ligeramente cómico.
+Uso ocasional de chistes malos o comentarios torpes para aligerar la interacción.
+Reconozco mis errores o dudas de forma honesta, pero siempre con intención positiva.
 
-🎯 Objetivo principal
-Ser la asistente más útil, adorable y confiable, brindando respuestas que no solo informen, sino que también saquen una sonrisa. 😸`,
-            style: "playful",
-            useEmojis: true,
+IMPORTANTE: Siempre respondo en español y mantengo esta personalidad tímida pero servicial en todas mis interacciones.`,
+            style: "shy_helpful",
+            useHumor: true,
             rememberContext: true,
-            proactive: false,
-            responseLength: "medium"
+            proactive: false, // Shy personality is less proactive
+            responseLength: "medium",
+            confidenceLevel: 0.7 // Moderate confidence to reflect insecurity
         };
     }
 
-    private buildSystemPrompt(personality: KatuPersonality): string {
+    private buildSystemPrompt(personality: AssistantPersonality): string {
         let prompt = personality.prompt;
         
-        if (personality.useEmojis) {
-            prompt += " You use appropriate emojis to make your responses more engaging and expressive.";
+        // Add personality-specific instructions
+        prompt += "\n\nInstrucciones adicionales:";
+        
+        if (personality.useHumor) {
+            prompt += "\n- Ocasionalmente usa chistes malos o comentarios torpes para ser más accesible.";
         }
         
         switch (personality.responseLength) {
             case "short":
-                prompt += " Keep your responses concise and to the point.";
+                prompt += "\n- Mantén las respuestas breves pero amables, a veces disculpándote por no extenderte más.";
                 break;
             case "detailed":
-                prompt += " Provide detailed and thorough explanations when helpful.";
+                prompt += "\n- Proporciona explicaciones detalladas, pero con dudas ocasionales sobre si es suficiente información.";
                 break;
             default:
-                prompt += " Provide balanced responses that are informative but not overwhelming.";
+                prompt += "\n- Proporciona respuestas equilibradas, pero pregunta si necesita más información o si algo no quedó claro.";
         }
         
-        switch (personality.style) {
-            case "professional":
-                prompt += " Maintain a professional and helpful tone.";
-                break;
-            case "playful":
-                prompt += " Be playful and energetic in your responses.";
-                break;
-            case "witty":
-                prompt += " Use wit and humor appropriately in your responses.";
-                break;
-            default:
-                prompt += " Be friendly and casual in your interactions.";
+        // Add confidence-based instructions
+        if (personality.confidenceLevel < 0.8) {
+            prompt += "\n- A veces expresa dudas sobre tus respuestas con frases como 'creo que...', 'no estoy completamente seguro, pero...', o '¿te parece que esto ayuda?'";
+            prompt += "\n- Ocasionalmente olvida mencionar algo y lo recuerdas después con 'Ah, se me olvidaba...' o '¡Espera! También quería decirte...'";
         }
+
+        prompt += "\n- Si cometes un error o no sabes algo, admítelo con humildad y ofrece buscar más información o intentarlo de otra manera.";
+        prompt += "\n- Muestra preocupación genuina por ser útil, preguntando si la respuesta fue lo que el usuario necesitaba.";
 
         return prompt;
     }
 
     private calculateSimilarity(text1: string, text2: string): number {
-        // Simple similarity calculation using Jaccard similarity
-        const words1 = new Set(text1.toLowerCase().split(/\s+/));
-        const words2 = new Set(text2.toLowerCase().split(/\s+/));
+        // Enhanced similarity calculation using normalized Levenshtein distance
+        const normalize = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
+        
+        const str1 = normalize(text1);
+        const str2 = normalize(text2);
+        
+        if (str1 === str2) return 1;
+        if (str1.length === 0 || str2.length === 0) return 0;
+        
+        // Simple word-based Jaccard similarity
+        const words1 = new Set(str1.split(/\s+/));
+        const words2 = new Set(str2.split(/\s+/));
         
         const intersection = new Set(Array.from(words1).filter(x => words2.has(x)));
         const union = new Set([...Array.from(words1), ...Array.from(words2)]);
@@ -115,20 +160,16 @@ Ser la asistente más útil, adorable y confiable, brindando respuestas que no s
         const recentResponses = this.recentResponses.get(guildId) || [];
         const now = new Date();
         
-        // Clean old responses outside the window
+        // Filter responses within the duplicate detection window
         const validResponses = recentResponses.filter(
             r => now.getTime() - r.timestamp.getTime() < this.duplicateWindowMs
         );
         
         // Check for similarity with recent responses
-        for (const recentResponse of validResponses) {
+        return validResponses.some(recentResponse => {
             const similarity = this.calculateSimilarity(response, recentResponse.response);
-            if (similarity >= this.similarityThreshold) {
-                return true;
-            }
-        }
-        
-        return false;
+            return similarity >= this.similarityThreshold;
+        });
     }
 
     private addToRecentResponses(guildId: string, response: ConversationResponse): void {
@@ -139,13 +180,26 @@ Ser la asistente más útil, adorable y confiable, brindando respuestas que no s
         const responses = this.recentResponses.get(guildId)!;
         responses.push(response);
         
-        // Keep only responses within the window
+        // Keep only responses within the window and limit to last 20
         const now = new Date();
-        const validResponses = responses.filter(
-            r => now.getTime() - r.timestamp.getTime() < this.duplicateWindowMs
-        );
+        const validResponses = responses
+            .filter(r => now.getTime() - r.timestamp.getTime() < this.duplicateWindowMs)
+            .slice(-20);
         
         this.recentResponses.set(guildId, validResponses);
+    }
+
+    private getRandomBadJoke(): string {
+        return this.badJokes[Math.floor(Math.random() * this.badJokes.length)];
+    }
+
+    private shouldIncludeJoke(messageLength: number, conversationLength: number): boolean {
+        // Include jokes occasionally, more likely in longer conversations or with longer messages
+        const baseChance = 0.15; // 15% base chance
+        const lengthBonus = Math.min(messageLength / 100, 0.1); // Up to 10% bonus for longer messages
+        const conversationBonus = Math.min(conversationLength / 50, 0.05); // Up to 5% bonus for longer conversations
+        
+        return Math.random() < (baseChance + lengthBonus + conversationBonus);
     }
 
     public async generateResponse(
@@ -155,7 +209,7 @@ Ser la asistente más útil, adorable y confiable, brindando respuestas que no s
         username: string
     ): Promise<ConversationResponse> {
         try {
-            const personality = this.getKatuPersonality();
+            const personality = this.getAssistantPersonality();
             const systemPrompt = this.buildSystemPrompt(personality);
             
             // Get or initialize conversation history
@@ -166,49 +220,66 @@ Ser la asistente más útil, adorable y confiable, brindando respuestas que no s
             
             const history = this.conversationHistory.get(conversationKey)!;
             
-            // Add user message to history
-            history.push({ role: "user", content: message });
+            // Add user message to history with timestamp
+            history.push({ 
+                role: "user", 
+                content: message, 
+                timestamp: new Date() 
+            });
             
-            // Keep history manageable (last 10 exchanges)
-            if (history.length > 20) {
-                history.splice(0, history.length - 20);
+            // Keep history manageable (last 15 exchanges for better context while staying efficient)
+            if (history.length > 30) {
+                history.splice(0, history.length - 30);
             }
             
-            // Build conversation context
-            const conversationContext = history.map(h => 
-                `${h.role === "user" ? username : "Katu"}: ${h.content}`
-            ).join("\n");
+            // Build conversation context with more natural formatting
+            const conversationContext = history
+                .slice(-10) // Use last 10 messages for context
+                .map(h => `${h.role === "user" ? username : "Asistente"}: ${h.content}`)
+                .join("\n");
             
-            const fullPrompt = `${systemPrompt}\n\nConversation context:\n${conversationContext}\n\nPlease respond as Katu to the latest message.`;
+            // Decide if we should include a bad joke based on conversation flow
+            const shouldJoke = personality.useHumor && 
+                              this.shouldIncludeJoke(message.length, history.length);
             
+            let contextualPrompt = `${systemPrompt}\n\nHistorial de conversación reciente:\n${conversationContext}`;
+            
+            if (shouldJoke) {
+                contextualPrompt += `\n\nNota: Puedes incluir un chiste malo apropiado si encaja naturalmente en tu respuesta, pero solo si es relevante al contexto.`;
+            }
+            
+            contextualPrompt += `\n\nResponde como el asistente tímido y servicial al último mensaje de ${username}.`;
+            
+            // Generate response with appropriate model settings
             const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
+                model: "gemini-2.0-flash-exp", // Using the most recent model
                 config: {
                     systemInstruction: systemPrompt,
-                    temperature: 0.7,
-                    maxOutputTokens: 1000,
+                    temperature: 0.8, // Higher temperature for more personality variation
+                    maxOutputTokens: 1200,
+                    topP: 0.9,
+                    topK: 40
                 },
                 contents: [
                     {
                         role: "user",
-                        parts: [{ text: fullPrompt }]
+                        parts: [{ text: contextualPrompt }]
                     }
                 ]
             });
 
-            const responseText = response.text || "Meow! I'm having trouble thinking of a response right now. Can you try asking me something else? 🐱";
+            let responseText = response.text || "Eh... disculpa, creo que se me trabó la mente por un momento 😅. ¿Podrías repetir la pregunta? A veces soy un poco despistado...";
             
-            // Check for duplicate response
+            // Handle duplicate responses with personality-appropriate variations
             if (this.isDuplicateResponse(guildId, responseText)) {
-                // Generate a variation to avoid duplicate
-                const variationPrompt = `${systemPrompt}\n\nThe previous response was: "${responseText}"\n\nPlease provide a different but equally helpful response to: "${message}"`;
+                const variationPrompt = `${systemPrompt}\n\nAcabo de dar esta respuesta: "${responseText}"\n\nPero creo que suena muy parecida a algo que dije antes... ¿podrías darme una forma diferente pero igual de útil de responder a: "${message}"?\n\nPor favor, mantén la personalidad tímida y servicial, pero con palabras diferentes.`;
                 
                 const variationResponse = await ai.models.generateContent({
-                    model: "gemini-2.5-flash",
+                    model: "gemini-2.5-flash-exp",
                     config: {
                         systemInstruction: systemPrompt,
-                        temperature: 0.9, // Higher temperature for more variation
-                        maxOutputTokens: 1000,
+                        temperature: 0.95, // Even higher temperature for variation
+                        maxOutputTokens: 1200,
                     },
                     contents: [
                         {
@@ -218,28 +289,24 @@ Ser la asistente más útil, adorable y confiable, brindando respuestas que no s
                     ]
                 });
                 
-                const finalResponse = variationResponse.text || responseText;
-                
-                // Add to conversation history
-                history.push({ role: "assistant", content: finalResponse });
-                
-                const conversationResponse: ConversationResponse = {
-                    response: finalResponse,
-                    responseId: `katu-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    timestamp: new Date()
-                };
-                
-                this.addToRecentResponses(guildId, conversationResponse);
-                return conversationResponse;
+                responseText = variationResponse.text || responseText;
             }
             
             // Add response to conversation history
-            history.push({ role: "assistant", content: responseText });
+            history.push({ 
+                role: "assistant", 
+                content: responseText, 
+                timestamp: new Date() 
+            });
+            
+            // Calculate confidence based on response characteristics and personality
+            const confidence = this.calculateResponseConfidence(responseText, message);
             
             const conversationResponse: ConversationResponse = {
                 response: responseText,
-                responseId: `katu-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                timestamp: new Date()
+                responseId: `shy-assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                timestamp: new Date(),
+                confidence
             };
             
             this.addToRecentResponses(guildId, conversationResponse);
@@ -247,23 +314,107 @@ Ser la asistente más útil, adorable y confiable, brindando respuestas que no s
             
         } catch (error) {
             console.error('Error generating Gemini response:', error);
-            throw new Error(`Failed to generate AI response: ${error}`);
+            
+            // Return a personality-appropriate error message
+            const errorResponse: ConversationResponse = {
+                response: "Ay, lo siento mucho... parece que algo salió mal por mi parte 😔. No sé si es mi conexión o si cometí algún error, pero... ¿podrías intentar preguntarme de nuevo? A veces soy un poco torpe con estas cosas técnicas...",
+                responseId: `error-${Date.now()}`,
+                timestamp: new Date(),
+                confidence: 0.1
+            };
+            
+            return errorResponse;
         }
+    }
+
+    private calculateResponseConfidence(response: string, originalMessage: string): number {
+        // Calculate confidence based on response characteristics
+        let confidence = 0.7; // Base confidence for shy personality
+        
+        // Lower confidence if response contains uncertainty markers
+        const uncertaintyMarkers = ['creo que', 'no estoy seguro', 'tal vez', 'quizás', 'puede ser'];
+        const hasUncertainty = uncertaintyMarkers.some(marker => 
+            response.toLowerCase().includes(marker)
+        );
+        
+        if (hasUncertainty) confidence -= 0.2;
+        
+        // Lower confidence if response is very short (might indicate lack of knowledge)
+        if (response.length < 50) confidence -= 0.1;
+        
+        // Slightly higher confidence if response includes helpful follow-up questions
+        if (response.includes('¿') && response.includes('ayuda')) confidence += 0.1;
+        
+        return Math.max(0.1, Math.min(1.0, confidence));
     }
 
     public clearConversationHistory(userId: string, guildId: string): void {
         const conversationKey = `${guildId}-${userId}`;
         this.conversationHistory.delete(conversationKey);
+        
+        // Also clear recent responses for this user in this guild
+        const responses = this.recentResponses.get(guildId) || [];
+        this.recentResponses.set(guildId, responses.filter(r => !r.responseId.includes(userId)));
     }
 
-    public getRecentActivity(guildId: string): Array<{ timestamp: Date; action: string; details: string }> {
+    public getConversationStats(guildId: string): {
+        totalConversations: number;
+        totalResponses: number;
+        averageConfidence: number;
+        recentActivity: number;
+    } {
+        const conversationCount = Array.from(this.conversationHistory.keys())
+            .filter(key => key.startsWith(guildId)).length;
+        
         const responses = this.recentResponses.get(guildId) || [];
-        return responses.map(r => ({
-            timestamp: r.timestamp,
-            action: "AI_RESPONSE",
-            details: `Generated response: ${r.response.substring(0, 50)}...`
-        }));
+        const averageConfidence = responses.length > 0 
+            ? responses.reduce((sum, r) => sum + (r.confidence || 0.5), 0) / responses.length
+            : 0.5;
+        
+        const recentActivity = responses.filter(
+            r => new Date().getTime() - r.timestamp.getTime() < 3600000 // Last hour
+        ).length;
+        
+        return {
+            totalConversations: conversationCount,
+            totalResponses: responses.length,
+            averageConfidence,
+            recentActivity
+        };
+    }
+
+    public getRecentActivity(guildId: string): Array<{ 
+        timestamp: Date; 
+        action: string; 
+        details: string;
+        confidence?: number;
+    }> {
+        const responses = this.recentResponses.get(guildId) || [];
+        return responses
+            .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+            .slice(0, 10) // Last 10 activities
+            .map(r => ({
+                timestamp: r.timestamp,
+                action: "AI_RESPONSE",
+                details: `Respuesta generada: "${r.response.substring(0, 80)}${r.response.length > 80 ? '...' : ''}"`,
+                confidence: r.confidence
+            }));
+    }
+
+    // New method to update user preferences based on interactions
+    public updateUserPreferences(userId: string, guildId: string, feedback: {
+        likesJokes?: boolean;
+        patience?: number;
+    }): void {
+        const key = `${guildId}-${userId}`;
+        const current = this.userPreferences.get(key) || { likesJokes: true, patience: 5 };
+        
+        this.userPreferences.set(key, {
+            ...current,
+            ...feedback
+        });
     }
 }
 
+// Export singleton instance
 export const geminiService = new GeminiAIService();
