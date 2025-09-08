@@ -589,7 +589,7 @@ npm install
 
 ## 🌸 **¡Gracias por usar Katu Bot!**
 
-**Si te gusta este proyecto, ¡dale una ⭐ nya~!**
+**Si te gusta este proyecto, ¡dale una ⭐ ~!**
 
 [![GitHub Stars](https://img.shields.io/github/stars/aguitauwu/Katu-bot?style=social)](https://github.com/aguitauwu/Katu-bot/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/aguitauwu/Katu-bot?style=social)](https://github.com/aguitauwu/Katu-bot/network/members)
