@@ -15,7 +15,7 @@
 
 **¡Soy Katu Bot! ni yo se que soy ~**
 
-*Bot especializado en rastrear mensajes diarios, generar rankings adorables y gestionar estadísticas de servidor con personalidad gatuna*
+*Bot especializado en rastrear mensajes diarios, generar rankings y pos hablar con ia*
 
 ## 🚀 **¡Úsalo AHORA en Replit!**
 
