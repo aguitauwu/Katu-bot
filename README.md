@@ -571,7 +571,6 @@ npm install
 
 ### 📋 **Guidelines**
 
-- ✅ Mantener personalidad kawaii en mensajes
 - ✅ Usar TypeScript estricto
 - ✅ Incluir logs descriptivos con emojis
 - ✅ Documentar nuevas funciones
