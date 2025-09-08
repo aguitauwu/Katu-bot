@@ -594,10 +594,6 @@ npm install
 [![GitHub Stars](https://img.shields.io/github/stars/aguitauwu/Katu-bot?style=social)](https://github.com/aguitauwu/Katu-bot/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/aguitauwu/Katu-bot?style=social)](https://github.com/aguitauwu/Katu-bot/network/members)
 
-*🐱 *ronronea suavemente* Hecho con 💖 por la comunidad kawaii de programación!*
-
-**¡Nya~ Gracias por elegir Katu Bot para tu servidor de Discord! 🐱✨**
-
 [**🔗 Repositorio Principal**](https://github.com/aguitauwu/Katu-bot) • [**📋 Issues**](https://github.com/aguitauwu/Katu-bot/issues) • [**💬 Discussions**](https://github.com/aguitauwu/Katu-bot/discussions)
 
 </div>
