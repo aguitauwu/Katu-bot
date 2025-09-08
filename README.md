@@ -13,7 +13,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Kawaii](https://img.shields.io/badge/Kawaii-100%25-FF1493?style=flat-square)](.)
 
-**¡Nya~ 🐱 ¡Soy Katu Bot! Un contador de mensajes súper kawaii para Discord uwu~ ✨💖**
+**¡Soy Katu Bot! ni yo se que soy ~**
 
 *Bot especializado en rastrear mensajes diarios, generar rankings adorables y gestionar estadísticas de servidor con personalidad gatuna*
 
