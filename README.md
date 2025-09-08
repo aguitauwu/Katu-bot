@@ -2,6 +2,8 @@
 
 <div align="center">
 
+<img src="assets/katu-avatar.png" alt="Katu Bot Avatar" width="200" height="200" style="border-radius: 50%; border: 3px solid #FF69B4;"/>
+
 ![KATU Banner](https://img.shields.io/badge/🐱✨-KATU_BOT-FF69B4?style=for-the-badge&labelColor=FF91A4)
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-3776AB?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
@@ -60,6 +62,51 @@
 
 ---
 
+## 🤖✨ Asistente IA con Gemini
+
+<div align="center">
+<img src="https://img.shields.io/badge/🧠-Gemini_AI-4285F4?style=for-the-badge&labelColor=34A853&logo=google" alt="Gemini AI"/>
+</div>
+
+### 🌟 **¡Katu tiene personalidad propia!**
+
+Katu Bot no es solo un contador de mensajes, ¡también es tu asistente IA kawaii! 💖
+
+**🐱 Personalidad:**
+- **Neko girl kawaii y profesional** 🐱✨
+- **Responde en español** con toque juguetón pero útil
+- **Experta en múltiples temas**: ciencia, arte, cultura pop, programación
+- **Siempre respetuosa** y apta para todas las edades
+- **Powered by Google Gemini AI** 🧠
+
+### 💬 **Cómo conversar con Katu:**
+
+| Método | Comando | Ejemplo |
+|--------|---------|---------|
+| 🔗 **Mención** | `@katu [mensaje]` | `@katu ¿cuánto es 2+2?` |
+| 🐱 **Palabra clave** | `katu [mensaje]` | `katu cuéntame un chiste` |
+
+### 🎯 **Capacidades de la IA:**
+
+- ✅ **Conversaciones naturales** en español
+- ✅ **Resolución de problemas** matemáticos y lógicos  
+- ✅ **Explicaciones técnicas** simplificadas
+- ✅ **Recomendaciones** de anime, música, juegos
+- ✅ **Ayuda con programación** y tecnología
+- ✅ **Datos curiosos** y trivia general
+- ✅ **Soporte emocional** con personalidad kawaii
+
+### 🛡️ **Configuración IA:**
+
+```env
+# Requerido para funcionalidad IA
+GEMINI_API_KEY=tu_api_key_de_gemini_aqui
+```
+
+**💡 Tip:** ¡Katu responde 24/7 y nunca se cansa de platicar contigo! *nya~* 🐱
+
+---
+
 ## 📋 Comandos Disponibles
 
 ### 👥 **Comandos para Usuarios**
@@ -113,11 +160,17 @@ npm run dev
 # Discord Configuration
 DISCORD_TOKEN=tu_token_del_bot_aqui
 
+# AI Configuration (Gemini)
+GEMINI_API_KEY=tu_api_key_de_gemini_aqui
+
 # Database (MongoDB recomendado)
 MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/katubot
 
 # Opcional: PostgreSQL como alternativa
 # DATABASE_URL=postgresql://user:password@host:port/database
+
+# Session & Security
+SESSION_SECRET=tu_session_secret_aqui
 
 # Environment
 NODE_ENV=development
@@ -134,34 +187,86 @@ NODE_ENV=development
 
 1. **Instalar VS Code y abrir proyecto:**
    ```bash
-   # Clonar y abrir
+   # Descargar VS Code: https://code.visualstudio.com/
+   # Clonar repositorio
    git clone https://github.com/aguitauwu/Katu-bot.git
+   
+   # Abrir en VS Code
    code Katu-bot
    ```
 
-2. **Extensiones recomendadas (automáticamente sugeridas):**
-   - TypeScript and JavaScript Language Features
-   - Discord.js Snippets
-   - MongoDB for VS Code
-   - GitLens
-   - ESLint
+2. **Extensiones recomendadas (instalar automáticamente):**
+   - **TypeScript and JavaScript Language Features** (incluida)
+   - **Discord.js Snippets** - Autocompletado para Discord.js
+   - **MongoDB for VS Code** - Explorador de MongoDB integrado
+   - **GitLens** - Historial y blame de Git avanzado
+   - **ESLint** - Linting de código TypeScript
+   - **Prettier** - Formateo automático de código
+   - **Auto Import - TypeScript** - Imports automáticos
 
 3. **Configuración del workspace (.vscode/settings.json):**
    ```json
    {
      "typescript.preferences.importModuleSpecifier": "relative",
      "editor.formatOnSave": true,
+     "editor.codeActionsOnSave": {
+       "source.fixAll.eslint": true
+     },
      "files.exclude": {
        "**/node_modules": true,
-       "**/dist": true
+       "**/dist": true,
+       "**/.env": false
+     },
+     "typescript.suggest.autoImports": true,
+     "editor.quickSuggestions": {
+       "strings": true
      }
    }
    ```
 
-4. **Ejecutar desde VS Code:**
-   - Terminal integrado: `Ctrl+Shift+\`` 
-   - Ejecutar: `npm run dev`
-   - Ver logs en tiempo real
+4. **Setup completo paso a paso:**
+   ```bash
+   # Terminal integrado: Ctrl+Shift+`
+   
+   # 1. Instalar dependencias
+   npm install
+   
+   # 2. Configurar variables de entorno
+   cp .env.example .env
+   # Editar .env con tus credenciales (Ctrl+P -> .env)
+   
+   # 3. Configurar Discord Bot:
+   # - Ir a https://discord.com/developers/applications
+   # - Crear nueva aplicación
+   # - Bot > Reset Token > Copiar token
+   # - Pegar en DISCORD_TOKEN en .env
+   # - Habilitar "Message Content Intent"
+   
+   # 4. Configurar Gemini IA:
+   # - Ir a https://aistudio.google.com/app/apikey
+   # - Crear API Key
+   # - Pegar en GEMINI_API_KEY en .env
+   
+   # 5. Configurar MongoDB:
+   # - Registrarte en https://cloud.mongodb.com
+   # - Crear cluster gratuito
+   # - Obtener connection string
+   # - Pegar en MONGODB_URI en .env
+   
+   # 6. Ejecutar proyecto
+   npm run dev
+   
+   # ✅ Verificar en terminal: "🤖 Bot autenticado exitosamente"
+   ```
+
+5. **Features útiles de VS Code:**
+   - **Ctrl+P**: Búsqueda rápida de archivos
+   - **Ctrl+Shift+P**: Paleta de comandos
+   - **F12**: Ir a definición
+   - **Ctrl+`**: Terminal integrado
+   - **Ctrl+Shift+\`**: Nueva terminal
+   - **Ctrl+K+C**: Comentar líneas
+   - **Alt+↑/↓**: Mover líneas
 
 </details>
 

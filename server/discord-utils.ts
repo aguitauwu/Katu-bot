@@ -94,11 +94,7 @@ export function createHelpEmbed(): EmbedBuilder {
     },
     {
       name: '🤖 Sobre la IA',
-      value: `• katu usa **Gemini AI** para conversaciones naturales
-• Personalidad: Neko girl kawaii y profesional 🐱
-• Responde en español con toque juguetón pero útil
-• Experta en múltiples temas: ciencia, arte, cultura pop
-• Siempre respetuosa y apta para todas las edades`,
+      value: `• katu usa **Gemini AI** para conversaciones naturales`,
       inline: false,
     },
     {
