@@ -58,14 +58,14 @@ export class GeminiAIService {
     private cleanOldConversations(): void {
         const oneDayAgo = new Date(Date.now() - 86400000); // 24 hours ago
         
-        for (const [key, history] of this.conversationHistory.entries()) {
+        this.conversationHistory.forEach((history, key) => {
             const recentHistory = history.filter((h: ConversationContext) => h.timestamp > oneDayAgo);
             if (recentHistory.length === 0) {
                 this.conversationHistory.delete(key);
             } else {
                 this.conversationHistory.set(key, recentHistory);
             }
-        }
+        });
     }
 
     private getAssistantPersonality(): AssistantPersonality {
