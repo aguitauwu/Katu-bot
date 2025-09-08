@@ -76,13 +76,10 @@
 
 ### 🌟 **¡Katu tiene personalidad propia!**
 
-Katu Bot no es solo un contador de mensajes, ¡también es tu asistente IA kawaii! 💖
+Katu Bot no es solo un contador de mensajes, ¡también e una ia ! 
 
 **🐱 Personalidad:**
-- **Neko girl kawaii y profesional** 🐱✨
-- **Responde en español** con toque juguetón pero útil
-- **Experta en múltiples temas**: ciencia, arte, cultura pop, programación
-- **Siempre respetuosa** y apta para todas las edades
+- *Cómo un humano we 🗣️🔥🔥** 
 - **Powered by Google Gemini AI** 🧠
 
 ### 💬 **Cómo conversar con Katu:**
