@@ -106,7 +106,7 @@ Katu Bot no es solo un contador de mensajes, ¡también e una ia !
 GEMINI_API_KEY=tu_api_key_de_gemini_aqui
 ```
 
-**💡 Tip:** ¡Katu responde 24/7 y nunca se cansa de platicar contigo! *nya~* 🐱
+**💡 Tip:** ¡Katu responde 24/7 y nunca se cansa (está como esclavo)!
 
 ---
 
