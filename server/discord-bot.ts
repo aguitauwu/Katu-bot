@@ -131,7 +131,13 @@ export class KatuBot {
         }
         break;
       case 'kai':
-        await this.handleKaiCommand(message, args);
+        Logger.info('Debug', `Executing .kai command with args: [${args.join(', ')}]`);
+        try {
+          await this.handleKaiCommand(message, args);
+        } catch (error) {
+          Logger.error('Debug', `Error in .kai case:`, error);
+          await message.reply("❌ Error ejecutando comando .kai");
+        }
         break;
     }
   }
