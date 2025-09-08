@@ -74,9 +74,7 @@ export function createHelpEmbed(): EmbedBuilder {
   embed.addFields([
     {
       name: '🐾 Comandos de IA',
-      value: `\`.kai [mensaje]\` - Conversa con katu usando IA Gemini
-\`.kai\` - Saludo inicial de katu
-\`@katu [mensaje]\` - Menciona al bot para conversar
+      value: `\`@katu [mensaje]\` - Menciona al bot para conversar
 \`katu [mensaje]\` - Inicia mensaje con "katu" para conversar`,
       inline: false,
     },
