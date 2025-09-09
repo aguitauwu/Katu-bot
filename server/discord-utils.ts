@@ -105,15 +105,6 @@ export function createHelpEmbed(): EmbedBuilder {
 • Personalidad: Tímida, olvidadiza y torpe, pero muy útil`,
       inline: false,
     },
-    {
-      name: '📋 Información',
-      value: `• Los contadores se resetean automáticamente a las 12:00 AM UTC
-• Solo se cuentan mensajes de usuarios (no bots)
-• Datos separados por servidor
-• Bot activo 24/7 con IA siempre disponible
-• Datos guardados en MongoDB (persistentes)`,
-      inline: false,
-    },
   ]);
 
   return embed;
