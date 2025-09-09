@@ -12,18 +12,10 @@ export class ConversationHandler {
         // Don't respond in DMs for now
         if (!message.guild) return false;
         
-        // Respond if bot is mentioned
+        // ONLY respond if bot is mentioned
         if (message.mentions.has(message.client.user!)) return true;
         
-        // Respond if message starts with "katu" (case insensitive)
-        if (message.content.toLowerCase().startsWith('katu')) return true;
-        
-        // Respond to direct questions (contains question marks and is addressed generally)
-        if (message.content.includes('?') && message.content.length > 10) {
-            // Random chance to respond to questions (10%)
-            return Math.random() < 0.1;
-        }
-        
+        // No longer respond to "katu" or random questions
         return false;
     }
     

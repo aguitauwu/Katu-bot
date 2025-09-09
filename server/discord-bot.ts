@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Message, ActivityType } from 'discord.js';
+import { Client, GatewayIntentBits, Message, ActivityType, ChatInputCommandInteraction, SlashCommandBuilder, REST, Routes } from 'discord.js';
 import { getStorage } from './bot-storage.js';
 import { getCurrentDateUTC, logToChannel } from './discord-utils';
 import { Logger } from './logger';
@@ -35,16 +35,24 @@ export class KatuBot {
       Logger.discord(`Bot autenticado exitosamente como ${this.client.user?.tag}`);
       
       // Set bot activity status
-      this.client.user?.setActivity('Conversando con usuarios...', {
-        type: ActivityType.Listening,
+      this.client.user?.setActivity('.ktop', {
+        type: ActivityType.Streaming,
       });
 
+      // Register slash commands when bot is ready
+      this.registerSlashCommands();
+      
       // Log startup to all configured log channels
       this.logToAllGuilds('🚀 Katu Bot iniciado con IA Gemini activada');
     });
 
     this.client.on('messageCreate', (message) => {
       this.handleMessage(message);
+    });
+
+    this.client.on('interactionCreate', async (interaction) => {
+      if (!interaction.isChatInputCommand()) return;
+      await this.handleSlashCommand(interaction);
     });
 
     this.client.on('guildCreate', (guild) => {
@@ -130,15 +138,108 @@ export class KatuBot {
           await message.reply('¿Sobre qué te gustaría conversar? Usa `.kai [mensaje]` 🐱');
         }
         break;
-      case 'kai':
-        Logger.info('Debug', `Executing .kai command with args: [${args.join(', ')}]`);
-        try {
-          await this.handleKaiCommand(message, args);
-        } catch (error) {
-          Logger.error('Debug', `Error in .kai case:`, error);
-          await message.reply("❌ Error ejecutando comando .kai");
-        }
-        break;
+    }
+  }
+
+  private async handleSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    try {
+      switch (interaction.commandName) {
+        case 'kai':
+          const aiMessage = interaction.options.getString('message');
+          if (aiMessage) {
+            await interaction.deferReply();
+            
+            const aiResponse = await geminiService.generateResponse(
+              aiMessage,
+              interaction.user.id,
+              interaction.guildId!,
+              interaction.user.username
+            );
+            
+            if (aiResponse.response.length <= 2000) {
+              await interaction.editReply(aiResponse.response);
+            } else {
+              const chunks = this.splitMessage(aiResponse.response, 2000);
+              await interaction.editReply(chunks[0]);
+              
+              for (let i = 1; i < chunks.length && i < 3; i++) {
+                await interaction.followUp(chunks[i]);
+                if (i < chunks.length - 1) {
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+              }
+            }
+          } else {
+            await interaction.reply('¡Hola! 🐾 ¿En qué puedo ayudarte? Escribe tu mensaje para conversar conmigo, nya! ✨');
+          }
+          break;
+          
+        case 'ktop':
+          await interaction.deferReply();
+          // Create a fake message object for the ranking command
+          const fakeMessage = {
+            ...interaction,
+            reply: (content: string) => interaction.editReply(content),
+            guild: interaction.guild
+          } as any;
+          await handleRankingCommand(fakeMessage);
+          break;
+          
+        case 'help':
+          await interaction.deferReply();
+          const helpFakeMessage = {
+            ...interaction,
+            reply: (content: string) => interaction.editReply(content),
+            guild: interaction.guild
+          } as any;
+          await handleHelpCommand(helpFakeMessage);
+          break;
+          
+        default:
+          await interaction.reply('Comando no reconocido.');
+      }
+    } catch (error) {
+      Logger.error('SlashCommand', `Error ejecutando comando /${interaction.commandName}`, error);
+      
+      if (interaction.deferred) {
+        await interaction.editReply('❌ Error ejecutando comando');
+      } else {
+        await interaction.reply('❌ Error ejecutando comando');
+      }
+    }
+  }
+
+  private async registerSlashCommands(): Promise<void> {
+    const commands = [
+      new SlashCommandBuilder()
+        .setName('kai')
+        .setDescription('Habla con la IA del bot')
+        .addStringOption(option =>
+          option.setName('message')
+            .setDescription('Tu mensaje para la IA')
+            .setRequired(true)
+        ),
+      new SlashCommandBuilder()
+        .setName('ktop')
+        .setDescription('Ver ranking de usuarios más activos'),
+      new SlashCommandBuilder()
+        .setName('help')
+        .setDescription('Ver comandos disponibles del bot')
+    ].map(command => command.toJSON());
+
+    const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
+
+    try {
+      Logger.info('SlashCommands', 'Registrando comandos slash...');
+      
+      await rest.put(
+        Routes.applicationCommands(this.client.user!.id),
+        { body: commands }
+      );
+      
+      Logger.success('SlashCommands', 'Comandos slash registrados exitosamente');
+    } catch (error) {
+      Logger.error('SlashCommands', 'Error registrando comandos slash', error);
     }
   }
 
