@@ -178,9 +178,9 @@ export class KatuBot {
           await interaction.deferReply();
           // Create a fake message object for the ranking command
           const fakeMessage = {
-            ...interaction,
-            reply: (content: string) => interaction.editReply(content),
-            guild: interaction.guild
+            guild: { id: interaction.guildId },
+            reply: (content: any) => interaction.editReply(content),
+            client: interaction.client
           } as any;
           await handleRankingCommand(fakeMessage);
           break;
@@ -188,9 +188,9 @@ export class KatuBot {
         case 'help':
           await interaction.deferReply();
           const helpFakeMessage = {
-            ...interaction,
-            reply: (content: string) => interaction.editReply(content),
-            guild: interaction.guild
+            guild: { id: interaction.guildId },
+            reply: (content: any) => interaction.editReply(content),
+            client: interaction.client
           } as any;
           await handleHelpCommand(helpFakeMessage);
           break;

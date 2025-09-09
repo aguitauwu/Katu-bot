@@ -73,9 +73,16 @@ export function createHelpEmbed(): EmbedBuilder {
 
   embed.addFields([
     {
+      name: '⚡ Comandos Slash (Recomendados)',
+      value: `\`/kai [mensaje]\` - Habla con la IA del bot
+\`/ktop\` - Ver ranking de usuarios más activos
+\`/help\` - Mostrar esta ayuda`,
+      inline: false,
+    },
+    {
       name: '🐾 Comandos de IA',
       value: `\`@katu [mensaje]\` - Menciona al bot para conversar
-\`katu [mensaje]\` - Inicia mensaje con "katu" para conversar`,
+**Nota:** El comando \`.kai\` ya no está disponible, usa \`/kai\` o menciones`,
       inline: false,
     },
     {
@@ -94,7 +101,8 @@ export function createHelpEmbed(): EmbedBuilder {
     },
     {
       name: '🤖 Sobre la IA',
-      value: `• katu usa **Gemini AI** para conversaciones naturales`,
+      value: `• katu usa **Gemini AI** para conversaciones naturales
+• Personalidad: Tímida, olvidadiza y torpe, pero muy útil`,
       inline: false,
     },
     {
@@ -102,7 +110,8 @@ export function createHelpEmbed(): EmbedBuilder {
       value: `• Los contadores se resetean automáticamente a las 12:00 AM UTC
 • Solo se cuentan mensajes de usuarios (no bots)
 • Datos separados por servidor
-• Bot activo 24/7 con IA siempre disponible`,
+• Bot activo 24/7 con IA siempre disponible
+• Datos guardados en MongoDB (persistentes)`,
       inline: false,
     },
   ]);
