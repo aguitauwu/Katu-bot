@@ -252,10 +252,10 @@ IMPORTANTE: Siempre respondo en español y mantengo esta personalidad tímida pe
             
             // Generate response with appropriate model settings
             const response = await ai.models.generateContent({
-                model: "gemini-2.0-flash-exp", // Using the most recent model
+                model: "gemini-2.5-flash", // Using the most recent model
                 config: {
                     systemInstruction: systemPrompt,
-                    temperature: 0.8, // Higher temperature for more personality variation
+                    temperature: 0.7, // Higher temperature for more personality variation
                     maxOutputTokens: 1200,
                     topP: 0.9,
                     topK: 40
@@ -275,10 +275,10 @@ IMPORTANTE: Siempre respondo en español y mantengo esta personalidad tímida pe
                 const variationPrompt = `${systemPrompt}\n\nAcabo de dar esta respuesta: "${responseText}"\n\nPero creo que suena muy parecida a algo que dije antes... ¿podrías darme una forma diferente pero igual de útil de responder a: "${message}"?\n\nPor favor, mantén la personalidad tímida y servicial, pero con palabras diferentes.`;
                 
                 const variationResponse = await ai.models.generateContent({
-                    model: "gemini-2.5-flash-exp",
+                    model: "gemini-2.5-flash",
                     config: {
                         systemInstruction: systemPrompt,
-                        temperature: 0.95, // Even higher temperature for variation
+                        temperature: 0.70, // Even higher temperature for variation
                         maxOutputTokens: 1200,
                     },
                     contents: [

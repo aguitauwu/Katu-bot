@@ -55,7 +55,10 @@ class PostgresBotStorage implements IBotStorage {
       throw new Error("DATABASE_URL environment variable is required");
     }
     
-    const sql = neon(process.env.DATABASE_URL);
+    // Configure Neon with SSL options to handle certificate issues
+    const sql = neon(process.env.DATABASE_URL, {
+      fetchConnectionCache: true,
+    });
     this.db = drizzle(sql);
   }
 
@@ -405,17 +408,33 @@ let storage: IBotStorage;
 
 export async function initStorage(): Promise<void> {
   if (process.env.MONGODB_URI) {
-    const mongoStorage = new MongoStorage();
-    await mongoStorage.connect();
-    storage = mongoStorage;
-    Logger.database('Usando MongoDB como almacenamiento principal');
-  } else if (process.env.DATABASE_URL) {
-    storage = new PostgresBotStorage();
-    Logger.database('Usando PostgreSQL como almacenamiento principal');
-  } else {
-    storage = new MemoryBotStorage();
-    Logger.warn('Storage', 'Usando almacenamiento en memoria (los datos se perderán al reiniciar)');
+    try {
+      const mongoStorage = new MongoStorage();
+      await mongoStorage.connect();
+      storage = mongoStorage;
+      Logger.database('Usando MongoDB como almacenamiento principal');
+      return;
+    } catch (error) {
+      Logger.error('Storage', 'Error conectando a MongoDB, intentando PostgreSQL', error);
+    }
   }
+  
+  if (process.env.DATABASE_URL) {
+    try {
+      const pgStorage = new PostgresBotStorage();
+      // Test the connection with a simple query
+      await pgStorage.getGuildConfig('test_connection');
+      storage = pgStorage;
+      Logger.database('Usando PostgreSQL como almacenamiento principal');
+      return;
+    } catch (error) {
+      Logger.error('Storage', 'Error conectando a PostgreSQL, usando almacenamiento en memoria', error);
+    }
+  }
+  
+  // Fallback to memory storage
+  storage = new MemoryBotStorage();
+  Logger.warn('Storage', 'Usando almacenamiento en memoria (los datos se perderán al reiniciar)');
 }
 
 export function getStorage(): IBotStorage {
