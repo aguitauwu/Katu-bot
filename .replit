@@ -27,3 +27,8 @@ args = "npm run dev"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[deployment]
+deploymentTarget = "vm"
+run = ["npm", "start"]
+build = ["npm", "run", "build"]
