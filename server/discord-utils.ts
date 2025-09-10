@@ -98,12 +98,6 @@ export function createHelpEmbed(): EmbedBuilder {
 \`.kremovelog\` - Desactivar logs del bot`,
       inline: false,
     },
-    {
-      name: '🤖 Sobre la IA',
-      value: `• katu usa **Gemini AI** para conversaciones naturales
-• Personalidad: Tímida, olvidadiza y torpe, pero muy útil`,
-      inline: false,
-    },
   ]);
 
   return embed;
