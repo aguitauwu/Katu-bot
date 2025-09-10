@@ -81,8 +81,7 @@ export function createHelpEmbed(): EmbedBuilder {
     },
     {
       name: '🐾 Comandos de IA',
-      value: `\`@katu [mensaje]\` - Menciona al bot para conversar
-**Nota:** El comando \`.kai\` ya no está disponible, usa \`/kai\` o menciones`,
+      value: `\`@katu [mensaje]\` - Menciona al bot para conversar`,
       inline: false,
     },
     {
