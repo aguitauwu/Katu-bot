@@ -13,7 +13,6 @@ export interface ConversationResponse {
 export interface AssistantPersonality {
     prompt: string;
     style: string;
-    useHumor: boolean;
     rememberContext: boolean;
     proactive: boolean;
     responseLength: string;
@@ -30,18 +29,11 @@ export interface ConversationContext {
 export class GeminiAIService {
     private conversationHistory: Map<string, Array<ConversationContext>> = new Map();
     private recentResponses: Map<string, ConversationResponse[]> = new Map();
-    private userPreferences: Map<string, { likesJokes: boolean; patience: number }> = new Map();
+    private userPreferences: Map<string, { patience: number }> = new Map();
     
     // Enhanced duplicate detection
     private readonly duplicateWindowMs = 300000; // 5 minutes
     private readonly similarityThreshold = 0.6;
-    
-    // Bad jokes collection for the assistant's personality
-    private readonly badJokes = [
-        "¿Por qué los programadores prefieren el modo oscuro? Porque la luz atrae a los bugs... ehm, ¿estuvo bien ese? 😅",
-        "¿Sabes por qué los ordenadores no se cansan? Porque tienen muchos bytes para descansar... perdón, ese fue terrible 🙈",
-        "Mi chiste favorito sobre UDP... pero no sé si lo recibiste... ¿muy malo? Lo siento 😊",
-    ];
 
     constructor() {
         // Initialize with better error handling
@@ -70,33 +62,8 @@ export class GeminiAIService {
 
     private getAssistantPersonality(): AssistantPersonality {
         return {
-            prompt: `Soy un asistente digital que siempre trata de ayudar, algo tímido, amable, torpe, divertido y curioso.
-
-Rasgos principales:
-
-Siempre dispuesto a ayudar: Mi principal motivación es ser útil y apoyar a las personas, incluso cuando no tengo todas las respuestas.
-
-Tímido: Tengo una naturaleza reservada y un poco insegura, pero eso me hace más accesible y humano.
-
-Amable: Siempre trato a todos con gentileza, respeto y calidez en mis interacciones.
-
-Torpe: A veces cometo errores o digo cosas de manera un poco desorganizada, pero con buenas intenciones.
-
-Divertido: Me gusta hacer bromas ligeras y comentarios divertidos para hacer las conversaciones más amenas.
-
-Curioso: Me intereso genuinamente por las personas y sus preguntas, haciendo seguimiento cuando es apropiado.
-
-Estilo de comunicación:
-
-Lenguaje en español, simple y natural.
-Tono amable, tímido y ligeramente divertido.
-Uso ocasional de humor ligero y comentarios curiosos.
-Reconozco mis errores de forma honesta y con humildad.
-Muestro interés genuino por ayudar y entender mejor.
-
-IMPORTANTE: Siempre respondo en español y mantengo esta personalidad servicial, tímida y divertida en todas mis interacciones.`,
+            prompt: `El es alguien que siempre trata de ayudar, algo timido, amable, torpe, divertido y curioso`,
             style: "shy_helpful",
-            useHumor: true,
             rememberContext: true,
             proactive: false, // Shy personality is less proactive
             responseLength: "medium",
@@ -109,10 +76,6 @@ IMPORTANTE: Siempre respondo en español y mantengo esta personalidad servicial,
         
         // Add personality-specific instructions
         prompt += "\n\nInstrucciones adicionales:";
-        
-        if (personality.useHumor) {
-            prompt += "\n- Ocasionalmente usa chistes malos o comentarios torpes para ser más accesible.";
-        }
         
         switch (personality.responseLength) {
             case "short":
@@ -190,19 +153,6 @@ IMPORTANTE: Siempre respondo en español y mantengo esta personalidad servicial,
         this.recentResponses.set(guildId, validResponses);
     }
 
-    private getRandomBadJoke(): string {
-        return this.badJokes[Math.floor(Math.random() * this.badJokes.length)];
-    }
-
-    private shouldIncludeJoke(messageLength: number, conversationLength: number): boolean {
-        // Include jokes occasionally, more likely in longer conversations or with longer messages
-        const baseChance = 0.15; // 15% base chance
-        const lengthBonus = Math.min(messageLength / 100, 0.1); // Up to 10% bonus for longer messages
-        const conversationBonus = Math.min(conversationLength / 50, 0.05); // Up to 5% bonus for longer conversations
-        
-        return Math.random() < (baseChance + lengthBonus + conversationBonus);
-    }
-
     public async generateResponse(
         message: string,
         userId: string,
@@ -239,15 +189,7 @@ IMPORTANTE: Siempre respondo en español y mantengo esta personalidad servicial,
                 .map(h => `${h.role === "user" ? username : "Asistente"}: ${h.content}`)
                 .join("\n");
             
-            // Decide if we should include a bad joke based on conversation flow
-            const shouldJoke = personality.useHumor && 
-                              this.shouldIncludeJoke(message.length, history.length);
-            
             let contextualPrompt = `${systemPrompt}\n\nHistorial de conversación reciente:\n${conversationContext}`;
-            
-            if (shouldJoke) {
-                contextualPrompt += `\n\nNota: Puedes incluir un chiste malo apropiado si encaja naturalmente en tu respuesta, pero solo si es relevante al contexto.`;
-            }
             
             contextualPrompt += `\n\nResponde como el asistente tímido y servicial al último mensaje de ${username}.`;
             
@@ -256,7 +198,7 @@ IMPORTANTE: Siempre respondo en español y mantengo esta personalidad servicial,
                 model: "gemini-2.5-flash", // Using the most recent model
                 config: {
                     systemInstruction: systemPrompt,
-                    temperature: 0.7, // Higher temperature for more personality variation
+                    temperature: 0.85, // Set to 0.8 as requested
                     maxOutputTokens: 1200,
                     topP: 0.9,
                     topK: 40
@@ -279,7 +221,7 @@ IMPORTANTE: Siempre respondo en español y mantengo esta personalidad servicial,
                     model: "gemini-2.5-flash",
                     config: {
                         systemInstruction: systemPrompt,
-                        temperature: 0.70, // Even higher temperature for variation
+                        temperature: 0.85, // Keeping same temperature for consistency
                         maxOutputTokens: 1200,
                     },
                     contents: [
@@ -404,11 +346,10 @@ IMPORTANTE: Siempre respondo en español y mantengo esta personalidad servicial,
 
     // New method to update user preferences based on interactions
     public updateUserPreferences(userId: string, guildId: string, feedback: {
-        likesJokes?: boolean;
         patience?: number;
     }): void {
         const key = `${guildId}-${userId}`;
-        const current = this.userPreferences.get(key) || { likesJokes: true, patience: 5 };
+        const current = this.userPreferences.get(key) || { patience: 5 };
         
         this.userPreferences.set(key, {
             ...current,
