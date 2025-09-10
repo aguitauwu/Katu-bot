@@ -18,7 +18,7 @@
 
 ## 🚀 **¡Úsalo AHORA en Replit!**
 
-[![Run on Replit](https://img.shields.io/badge/🔥_Usar_en_Replit-4DFF4D?style=for-the-badge&logo=replit&logoColor=white)](https://replit.com/@regularcatfishz/Katu?s=app)
+[![Run on Replit](https://img.shields.io/badge/🔥_Usar_en_Replit-4DFF4D?style=for-the-badge&logo=replit&logoColor=white)](https://replit.com/@inclinedgullqjd/Katu-bot?s=app)
 
 **¿Quieres probar Katu Bot inmediatamente sin instalación?** ¡Solo haz clic arriba! 🎉
 
